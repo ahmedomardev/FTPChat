@@ -66,11 +66,11 @@ The protocol provides:
 
 **Option 1: Executable**
 
-- Download `FtpChat.exe` for Windows 10/11 from [Releases](https://github.com/ahmedomar2014/FTPChat/releases)
+- Download `FtpChat.exe` for Windows 10/11 from [Releases](https://github.com/ahmedomardev/FTPChat/releases)
 
 **Option 2: Python Source**
 
-- Clone from [GitHub](https://github.com/ahmedomar2014/FTPChat)
+- Clone from [GitHub](https://github.com/ahmedomardev/FTPChat)
 - Requires Python 3.8+ with dependencies: `cryptography`, `ttkbootstrap`
 
 ---
@@ -147,4 +147,4 @@ This license applies to all source code, documentation, and project specificatio
 
 - **Email:** [ahmedomardev@outlook.com](mailto:ahmedomardev@outlook.com)
 - **Phone:** +201040946638
-- **GitHub:** [https://github.com/ahmedomar2014/FTPChat](https://github.com/ahmedomar2014/FTPChat)
+- **GitHub:** [https://github.com/ahmedomar2014/FTPChat](https://github.com/ahmedomardev/FTPChat)
