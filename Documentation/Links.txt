@@ -1,0 +1,3 @@
+Support: https://ahmed-omar-software-projects.mydurable.com/
+Documentation: https://ahmedomar2014.github.io/home/
+SFTPCloud: https://sftpcloud.io/tools/free-ftp-server

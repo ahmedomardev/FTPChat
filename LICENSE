@@ -1,21 +1,31 @@
-MIT License
+FTPChat - Encrypted FTP-based Messaging Protocol  
+Type: MIT LICENSE
+Version 1.6 — February 2026
+Author: Ahmed Omar Saad  
+Contact: <ahmedomardev@outlook.com>
 
-Copyright (c) 2026 ahmedomarhuawei-hash
+Licensing Notice:
+- The project documentation (including guides, specifications, and explanatory text) is licensed under CC BY‑NC‑SA 4.0.
+- The source code and executable files are distributed under a custom MIT‑style license with strict non‑commercial conditions.
+- This dual licensing is intentional: it enforces openness for learning and sharing, while preserving strict control over protocol use and naming
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy  
+of this software and associated documentation files (the “Software”), to deal  
+in the Software without restriction, including without limitation the rights  
+to use, copy, modify, merge, publish, distribute, and/or sublicense copies of  
+the Software, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+- The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+- **Commercial use of this software requires prior written permission from the author.**
+- **The author reserves the right to relicense this software as closed-source or commercial at any time.**
+- All rights to the name “FTPChat” and its protocol specification are retained by Ahmed Omar Saad.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,  
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE  
+AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,  
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,  
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Notes:
+The author may offer separate commercial licenses for enterprise or closed-source use. Contact <ahmedomardev@outlook.com> for inquiries.
+This license applies to all source code, documentation, and protocol specifications included in the FTPChat project.
