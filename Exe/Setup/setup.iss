@@ -3,7 +3,7 @@
 ; Non-commercial use only
 
 #define MyAppName "FTPChat"
-#define MyAppVersion "1.6"
+#define MyAppVersion "1.7"
 #define MyAppPublisher "ahmedomardev"
 #define MyAppURL "https://ahmed-omar-software-projects.mydurable.com/"
 #define MyAppExeName "FtpChat.exe"
@@ -30,13 +30,13 @@ ArchitecturesAllowed=x64compatible
 ; the 64-bit view of the registry.
 ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
-LicenseFile=D:\Projects\Python\FtpChat\FtpChat 1.6\FTPChat\Exe\Setup\LICENSE.txt
+LicenseFile=D:\Projects\Python\FtpChat\FtpChat 1.7\FTPChat\Exe\Setup\LICENSE.txt
 ; Uncomment the following line to run in non administrative install mode (install for current user only).
 ;PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-OutputDir=D:\Projects\Python\FtpChat\FtpChat 1.6\FTPChat\Exe\Setup\Output
+OutputDir=D:\Projects\Python\FtpChat\FtpChat 1.7\FTPChat\Exe\Setup\Output
 OutputBaseFilename=mysetup
-SetupIconFile=D:\Projects\Python\FtpChat\FtpChat 1.6\FTPChat\Exe\Setup\SetupClassicIcon.ico
+SetupIconFile=D:\Projects\Python\FtpChat\FtpChat 1.7\FTPChat\Exe\Setup\SetupClassicIcon.ico
 SolidCompression=yes
 WizardStyle=modern dynamic windows11
 
@@ -47,7 +47,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "D:\Projects\Python\FtpChat\FtpChat 1.6\FTPChat\Exe\Setup\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "D:\Projects\Python\FtpChat\FtpChat 1.7\FTPChat\Exe\Setup\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

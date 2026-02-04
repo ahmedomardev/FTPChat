@@ -2,7 +2,8 @@
 
 ## Encrypted FTP-based Messaging Protocol
 
-**Version 1.6 — February 2026**  
+**Version: 1.7**  
+**Type:** Custom Proprietary License  
 **Author:** Ahmed Omar Saad  
 **Contact:** <ahmedomardev@outlook.com>
 
@@ -16,7 +17,7 @@ FTPChat is specifically designed for deployment in legacy environments, includin
 
 ---
 
-## Key Features (v1.6)
+## Key Features (v1.7)
 
 - **PBKDF2 SHA-256 Encryption** with Fernet for robust payload security
 - **File-based transport mechanism** utilizing FTP/FTPS fallback for maximum compatibility
@@ -26,22 +27,21 @@ FTPChat is specifically designed for deployment in legacy environments, includin
 - **Local LAN support** — set up your own FTP server
 - **Threaded send/receive** — no UI freezing during FTP operations
 - **Auto-refresh loop** with restart-safe scheduling
-- **Modern GUI** built with ttkbootstrap
+- **Modern GUI** built with CustomTkinter
 - **Non-editable chat history** with scrollable view
 - **Password-protected chats** with encryption key derivation
+- **Message Compression** using zlib for reduced file sizes
+- **Offset-based message fetching** to minimize bandwidth usage
 
 ---
 
-## New Features in v1.6
+## New Features in v1.7
 
-- **PBKDF2 SHA-256 Encryption** with Fernet for enhanced security
-- **Threaded FTP I/O** for non-blocking message operations
-- **FTP/FTPS Fallback** for maximum compatibility
-- **Modern ttkbootstrap UI** with improved styling
-- **Auto-refresh Loop** with restart-safe scheduling
-- **Message Compression** for reduced file sizes
-- **Auto-Scroll Chat Window** showing latest messages
-- **Password-Protected Sessions** with key derivation
+- **Updated to CustomTkinter** for improved modern UI
+- **Enhanced threading** for better performance
+- **Improved error handling** and user feedback
+- **Auto-scroll chat window** showing latest messages
+- **Compression and encryption** pipeline for efficient data handling
 
 ---
 
@@ -55,10 +55,11 @@ Messages are exchanged via a shared text file on an FTP server. Each message con
 
 The protocol provides:
 
-- Conflict-safe message writing
+- Conflict-safe message writing (with fallback for servers not supporting APPEND)
 - Encrypted message formatting
 - Lightweight, file-based communication
 - Automatic compression for reduced file sizes
+- Offset-based reading to fetch only new messages
 
 ---
 
@@ -71,7 +72,13 @@ The protocol provides:
 **Option 2: Python Source**
 
 - Clone from [GitHub](https://github.com/ahmedomardev/FTPChat)
-- Requires Python 3.8+ with dependencies: `cryptography`, `ttkbootstrap`
+- Requires Python 3.8+ with dependencies: `cryptography`, `customtkinter`
+
+Install dependencies via pip:
+
+```
+pip install cryptography customtkinter
+```
 
 ---
 
@@ -86,12 +93,12 @@ The protocol provides:
    - Execute `FtpChat.exe` (Windows) or `python FtpChat.py` (MacOS or Linux)
 
 3. **Configure Connection**
-   - Enter FTP host, username, and password
-   - Set encryption password (for message encryption)
-   - Choose a chat file name
+   - Click "Setup" to enter FTP host, username, password, chat file name, and encryption key
+   - Encryption key is used for message encryption/decryption
 
 4. **Start Chatting**
-   - Type messages and send via the UI
+   - Enter username and type messages
+   - Send messages using the "Send" button or Alt key
    - Messages auto-sync across all connected clients
    - Chat history is non-editable and read-only
 
@@ -99,8 +106,13 @@ The protocol provides:
 
 ## Requirements
 
-- Windows 10/11 for FTPChat.exe or MacOS or linux for ftpchat.py
-- At least 70Mb of free disk space
+1. For source code:
+   - Python 3.8+
+   - Dependencies: `cryptography`, `customtkinter`
+2. For Exe:
+   - Windows 10/11
+3. For Both
+   - FTP server access (local or remote)
 
 ---
 
@@ -115,36 +127,21 @@ The protocol provides:
 
 ## License
 
-FTPChat is distributed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)**.
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, and/or sublicense copies of the Software, subject to the following conditions:
 
-**Key Terms:**
+- The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+- **Commercial use of this software requires prior written permission from the author.**
+- **The author reserves the right to relicense this software as closed-source or commercial at any time.**
+- All rights to the name “FTPChat” and its protocol specification are retained by Ahmed Omar Saad.
 
-- ✓ Free for personal and educational use
-- ✓ Modification and distribution allowed (with attribution)
-- ✗ **Commercial use is strictly prohibited** without written permission
-- ✗ **Closed-source use requires separate license agreement**
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-**FTPChat © 2025 by Ahmed Omar Saad is licensed under CC BY-NC-SA 4.0**  
-To view a copy of this license, visit [https://creativecommons.org/licenses/by-nc-sa/4.0/](https://creativecommons.org/licenses/by-nc-sa/4.0/)
-
----
-
-## Warranty Disclaimer
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----
-
-## Commercial Licensing
-
-The author may offer separate commercial licenses for enterprise or closed-source use. Contact [ahmedomardev@outlook.com](mailto:ahmedomardev@outlook.com) for licensing inquiries.
-
-This license applies to all source code, documentation, and project specifications included in the FTPChat project.
+Notes: The author may offer separate commercial licenses for enterprise or closed-source use. Contact <ahmedomardev@outlook.com> for inquiries. This license applies to all source code, documentation, and protocol specifications included in the FTPChat project.
 
 ---
 
 ## Support & Contact
 
 - **Email:** [ahmedomardev@outlook.com](mailto:ahmedomardev@outlook.com)
-- **Phone:** +201040946638
-- **GitHub:** [https://github.com/ahmedomar2014/FTPChat](https://github.com/ahmedomardev/FTPChat)
+- **GitHub:** [https://github.com/ahmedomardev/FTPChat](https://github.com/ahmedomardev/FTPChat)
+- **Website:** [ahmed-omar-software-projects.mydurable.com](ahmed-omar-software-projects.mydurable.com)

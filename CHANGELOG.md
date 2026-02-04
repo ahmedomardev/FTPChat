@@ -1,16 +1,13 @@
-# FTPChat (File Transfer Chatting Project)
+# FTPChat
 
-**Encrypted FTP-Based Messaging Protocol**  
-**Version 1.6 — December 2025**  
+**Version: 1.7**  
+**Type:** Custom Proprietary License  
 **Author:** Ahmed Omar Saad  
 **Contact:** <ahmedomardev@outlook.com>
 
-FTPChat © 2025/5/20 by Ahmed Omar Saad is licensed under **CC BY-NC-SA 4.0**.  
-To view a copy of this license, visit <https://creativecommons.org/licenses/by-nc-sa/4.0/>
-
 ---
 
-## Key Features (v1.6)
+## Key Features (v1.7)
 
 - **PBKDF2 SHA-256 Encryption** with Fernet for robust payload security
 - **File-based transport mechanism** utilizing FTP/FTPS fallback for maximum compatibility
@@ -20,19 +17,18 @@ To view a copy of this license, visit <https://creativecommons.org/licenses/by-n
 - **Local LAN support** — set up your own FTP server
 - **Threaded send/receive** — no UI freezing during FTP operations
 - **Auto-refresh loop** with restart-safe scheduling
-- **Modern GUI** built with ttkbootstrap
+- **Modern GUI** built with CustomTkinter
 - **Non-editable chat history** with scrollable view
 - **Password-protected chats** with encryption key derivation
+- **Message Compression** using zlib for reduced file sizes
+- **Offset-based message fetching** to minimize bandwidth usage
 
 ---
 
-## New Features in v1.6
+## New Features in v1.7
 
-- **PBKDF2 SHA-256 Encryption** with Fernet for enhanced security
-- **Threaded FTP I/O** for non-blocking message operations
-- **FTP/FTPS Fallback** for maximum compatibility
-- **Modern ttkbootstrap UI** with improved styling
-- **Auto-refresh Loop** with restart-safe scheduling
-- **Message Compression** for reduced file sizes
-- **Auto-Scroll Chat Window** showing latest messages
-- **Password-Protected Sessions** with key derivation
+- **Updated to CustomTkinter** for improved modern UI
+- **Enhanced threading** for better performance
+- **Improved error handling** and user feedback
+- **Auto-scroll chat window** showing latest messages
+- **Compression and encryption** pipeline for efficient data handling

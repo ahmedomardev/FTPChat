@@ -1,13 +1,7 @@
 FTPChat - Encrypted FTP-based Messaging Protocol  
-Type: MIT LICENSE
-Version 1.6 — February 2026
+Type: Custom Proprietary License
 Author: Ahmed Omar Saad  
 Contact: <ahmedomardev@outlook.com>
-
-Licensing Notice:
-- The project documentation (including guides, specifications, and explanatory text) is licensed under CC BY‑NC‑SA 4.0.
-- The source code and executable files are distributed under a custom MIT‑style license with strict non‑commercial conditions.
-- This dual licensing is intentional: it enforces openness for learning and sharing, while preserving strict control over protocol use and naming
 
 Permission is hereby granted, free of charge, to any person obtaining a copy  
 of this software and associated documentation files (the “Software”), to deal  
