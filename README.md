@@ -140,6 +140,12 @@ Notes: The author may offer separate commercial licenses for enterprise or close
 
 ---
 
+## Notes:
+
+- The supplies folder is for the apps used in the app development.
+
+---
+
 ## Support & Contact
 
 - **Email:** [ahmedomardev@outlook.com](mailto:ahmedomardev@outlook.com)
