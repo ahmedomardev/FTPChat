@@ -21,7 +21,6 @@ FTPChat is specifically designed for deployment in legacy environments, includin
 
 - **PBKDF2 SHA-256 Encryption** with Fernet for robust payload security
 - **File-based transport mechanism** utilizing FTP/FTPS fallback for maximum compatibility
-- **Single `.py` file deployment** for simplicity and portability
 - **Optimized for legacy hardware and low-power devices**
 - **International chatting** via [SFTPCloud Tool](https://sftpcloud.io/tools/free-ftp-server)
 - **Local LAN support** — set up your own FTP server
