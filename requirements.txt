@@ -1,6 +1,0 @@
-customtkinter
-cryptography
-paramiko
-plyer
-pystray
-Pillow
