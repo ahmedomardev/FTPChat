@@ -31,7 +31,7 @@ disconnect_button = None
 # *--- GLOBALS ---
 SALT = b"q6334#Q0q8294%E$(#$%^&^%$#@!#%^YHB>$W#CX>E"
 CONNECTED = False
-stored_ftp_host = stored_ftp_user = stored_ftp_pass = stored_chat_name = stored_enc_pass = stored_display_name = None
+stored_ftp_host = stored_ftp_user = stored_ftp_pass = stored_chat_name = stored_enc_pass = stored_display_name = ""
 stored_ignore_notifications = False
 last_read_byte_offset = 0
 last_line_count = 0
