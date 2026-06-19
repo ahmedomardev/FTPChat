@@ -2,7 +2,7 @@
 
 ## Encrypted FTP-based Messaging Protocol
 
-**Version: 2.0**  
+**Version: 2.1**  
 **Type:** Custom Proprietary License  
 **Author:** Ahmed Omar Saad  
 **Contact:** <ahmedomardev@outlook.com>
@@ -17,36 +17,22 @@ FTPChat is specifically designed for deployment in legacy environments, includin
 
 ---
 
-## Key Features (v2.0)
+## Key Features (v2.1)
 
-- **PBKDF2 SHA-256 Encryption** with Fernet for robust payload security
-- **File-based transport mechanism** utilizing FTP/FTPS fallback for maximum compatibility
-- **Optimized for legacy hardware and low-power devices**
-- **International chatting** via [SFTPCloud Tool](https://sftpcloud.io/tools/free-ftp-server)
-- **Local LAN support** — set up your own FTP server
-- **Threaded send/receive** — no UI freezing during FTP operations
-- **Auto-refresh loop** with restart-safe scheduling
-- **Modern GUI** built with CustomTkinter
-- **Non-editable chat history** with scrollable view
-- **Password-protected chats** with encryption key derivation
-- **Message Compression** using zlib for reduced file sizes
-- **Offset-based message fetching** to minimize bandwidth usage
-- **Connect and disconnect Buttons** for better UX
-- **Saving Credentials** for saving time and effort
-- **Improved UI** for the best look
+- **Encrypted chat messages** (PBKDF2-SHA256 → Fernet) with **zlib compression**.
+- **FTP/FTPS/SFTP fallback** for maximum compatibility.
+- **Threaded send/receive** + timed **auto-refresh loop** (keeps UI responsive).
+- **Offset/line-count based syncing** to minimize bandwidth usage.
+- **Saved setups** (save/load/delete) with **per-setup notification ignore**.
+- **Modal setup form** for faster configuration.
+- **Tray minimization** support (run in background while hidden).
+- **CustomTkinter GUI** with scrollable, non-editable chat history.
 
 ---
 
-## New Features in v2.0
+## Notes about the protocol
 
-- Added saved setup management with save, load, delete, and ignore notification support.
-- Added tray minimization support to keep the app running while hidden.
-- Added modal setup form for streamlined connection configuration.
-- Added SFTP/FTPS/FTP fallback connection sequence for safer and more compatible server access.
-- Added threaded send/receive operations to prevent UI blocking during network transfers.
-- Added offset-based message fetching and encrypted file-based chat transport.
-- Added message compression and Fernet encryption with PBKDF2 key derivation.
-- Added improved connection/disconnect status handling and user feedback.
+Messages are exchanged via a shared text file on the server. Each message line includes a timestamp, username, and an encrypted payload.
 
 ---
 
@@ -77,12 +63,12 @@ The protocol provides:
 **Option 2: Python Source**
 
 - Clone from [GitHub](https://github.com/ahmedomardev/FTPChat)
-- Requires Python 3.8+ with dependencies: `cryptography`, `customtkinter`, `paramiko`
+- Requires Python 3.8+ and the dependencies listed in `requirements.txt`.
 
-Install desktop dependencies via pip:
+Install dependencies via pip:
 
 ```
-pip install cryptography customtkinter paramiko
+pip install -r requirements.txt
 ```
 
 ---
@@ -113,7 +99,7 @@ pip install cryptography customtkinter paramiko
 
 1. For source code:
    - Python 3.8+
-   - Dependencies: `cryptography`, `customtkinter`, `paramiko`
+   - Dependencies: see `requirements.txt`
 2. For Exe:
    - Windows 10/11
 3. For Both
