@@ -1,5 +1,5 @@
 """
-*Version: 2.0
+*Version: 2.1
 FTPChat - Encrypted FTP-based Messaging Protocol
 Type: Custom Proprietary License
 Author: Ahmed Omar Saad
