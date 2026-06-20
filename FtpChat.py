@@ -197,9 +197,7 @@ def open_setup_modal(save_only: bool = False):
     if stored_enc_pass:
         enc_pass_entry.insert(0, stored_enc_pass)
 
-    ignore_var = ctk.BooleanVar(
-        value=getattr(functions, "stored_ignore_notifications", False)
-    )
+    ignore_var = ctk.BooleanVar(value=bool(stored_ignore_notifications))
     ctk.CTkLabel(
         form_frame,
         text="Ignore Notifications:",
