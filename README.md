@@ -2,7 +2,7 @@
 
 ## Encrypted FTP-based Messaging Protocol
 
-**Version: 2.1**  
+**Version: 2.2**  
 **Type:** Custom Proprietary License  
 **Author:** Ahmed Omar Saad  
 **Contact:** <ahmedomardev@outlook.com>
@@ -17,7 +17,7 @@ FTPChat is specifically designed for deployment in legacy environments, includin
 
 ---
 
-## Key Features (v2.1)
+## Key Features (v2.2)
 
 - **Encrypted chat messages** (PBKDF2-SHA256 → Fernet) with **zlib compression**.
 - **FTP/FTPS/SFTP fallback** for maximum compatibility.
