@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "FTPChat"
-#define MyAppVersion "2.1"
+#define MyAppVersion "2.2"
 #define MyAppPublisher "ahmedomardev"
 #define MyAppExeName "FtpChat.exe"
 
@@ -25,11 +25,11 @@ ArchitecturesAllowed=x64compatible
 ; the 64-bit view of the registry.
 ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
-LicenseFile=D:\Projects\Python\FtpChat\FtpChat 2.1\FTPChat\Exe\Setup\LICENSE.txt
+LicenseFile=D:\Projects\Python\FtpChat\FtpChat 2.2\FTPChat\Exe\Setup\LICENSE.txt
 ; Uncomment the following line to run in non administrative install mode (install for current user only).
 ;PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-OutputDir=D:\Projects\Python\FtpChat\FtpChat 2.1\FTPChat\Exe\Setup\Output
+OutputDir=D:\Projects\Python\FtpChat\FtpChat 2.2\FTPChat\Exe\Setup\Output
 OutputBaseFilename=mysetup
 SolidCompression=yes
 WizardStyle=modern
@@ -41,7 +41,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "D:\Projects\Python\FtpChat\FtpChat 2.1\FTPChat\Exe\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "D:\Projects\Python\FtpChat\FtpChat 2.2\FTPChat\Exe\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

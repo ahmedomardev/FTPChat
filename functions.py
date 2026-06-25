@@ -31,7 +31,9 @@ disconnect_button = None
 # *--- GLOBALS ---
 SALT = b"q6334#Q0q8294%E$(#$%^&^%$#@!#%^YHB>$W#CX>E"
 CONNECTED = False
-stored_ftp_host = stored_ftp_user = stored_ftp_pass = stored_chat_name = stored_enc_pass = stored_display_name = ""
+stored_ftp_host = stored_ftp_user = stored_ftp_pass = stored_chat_name = (
+    stored_enc_pass
+) = stored_display_name = ""
 stored_ignore_notifications = False
 last_read_byte_offset = 0
 last_line_count = 0
@@ -95,8 +97,7 @@ def help_func():
 saved_setups = []
 saved_setups_container = None
 chat_title = None
-saved_setups_file = os.path.join(
-    os.path.dirname(__file__), "saved_setups.json")
+saved_setups_file = os.path.join(os.path.dirname(__file__), "saved_setups.json")
 tray_icon = None
 
 
@@ -104,7 +105,7 @@ def _create_tray_image():
     # Minimal generated image for tray icon
     if Image is None or ImageDraw is None:
         return None
-    img = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
+    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     draw.ellipse((8, 8, 56, 56), fill=(96, 165, 250, 255))
     return img
@@ -115,8 +116,7 @@ def minimize_to_tray():
     global tray_icon
     if pystray is None:
         try:
-            messagebox.showwarning(
-                "Tray Unavailable", "pystray/Pillow not installed")
+            messagebox.showwarning("Tray Unavailable", "pystray/Pillow not installed")
         except Exception:
             pass
         return
@@ -146,9 +146,8 @@ def minimize_to_tray():
             pass
 
     image = _create_tray_image()
-    menu = (pystray.MenuItem('Restore', on_restore),
-            pystray.MenuItem('Quit', on_quit))
-    tray_icon = pystray.Icon('ftpchat', image, 'FTPChat', menu)
+    menu = (pystray.MenuItem("Restore", on_restore), pystray.MenuItem("Quit", on_quit))
+    tray_icon = pystray.Icon("ftpchat", image, "FTPChat", menu)
 
     def run_icon():
         try:
@@ -201,8 +200,7 @@ def save_setup_entry(name, display_name, host, user, passwd, chat_name, enc_pass
         "ignore": globals().get("stored_ignore_notifications", False),
     }
     if existing:
-        saved_setups = [
-            item for item in saved_setups if item["name"] != name.strip()]
+        saved_setups = [item for item in saved_setups if item["name"] != name.strip()]
     saved_setups.append(new_entry)
     persist_saved_setups()
     try:
@@ -223,7 +221,7 @@ def toggle_ignore(name):
             # If this is the selected setup, also update runtime flag
             try:
                 if chat_title and chat_title.cget("text") == name:
-                    globals()['stored_ignore_notifications'] = item["ignore"]
+                    globals()["stored_ignore_notifications"] = item["ignore"]
             except Exception:
                 pass
             break
@@ -246,14 +244,14 @@ def delete_saved_setup(name):
 
 def load_saved_setup(setup):
     try:
-        globals()['stored_ftp_host'] = setup["host"]
-        globals()['stored_ftp_user'] = setup["user"]
-        globals()['stored_ftp_pass'] = setup["pass"]
-        globals()['stored_chat_name'] = setup["chat"]
-        globals()['stored_enc_pass'] = setup["enc"]
-        globals()['stored_ignore_notifications'] = setup.get("ignore", False)
+        globals()["stored_ftp_host"] = setup["host"]
+        globals()["stored_ftp_user"] = setup["user"]
+        globals()["stored_ftp_pass"] = setup["pass"]
+        globals()["stored_chat_name"] = setup["chat"]
+        globals()["stored_enc_pass"] = setup["enc"]
+        globals()["stored_ignore_notifications"] = setup.get("ignore", False)
         display_name = setup.get("display_name", setup["name"])
-        globals()['stored_display_name'] = display_name
+        globals()["stored_display_name"] = display_name
         if chat_title is not None:
             try:
                 chat_title.configure(text=setup["name"])
@@ -262,7 +260,8 @@ def load_saved_setup(setup):
         if status_label is not None:
             try:
                 status_label.configure(
-                    text=f"Loaded {setup['name']}", text_color="#60a5fa")
+                    text=f"Loaded {setup['name']}", text_color="#60a5fa"
+                )
             except Exception:
                 pass
         try:
@@ -284,7 +283,7 @@ def render_saved_setups():
     for setup in saved_setups:
         is_selected = False
         try:
-            is_selected = (chat_title.cget("text") == setup.get("name"))
+            is_selected = chat_title.cget("text") == setup.get("name")
         except Exception:
             is_selected = False
         row_frame = ctk.CTkFrame(
@@ -361,7 +360,12 @@ def open_setup_modal(save_only: bool = False):
     }
 
     form_frame = ctk.CTkFrame(
-        modal, fg_color="#111827", corner_radius=20, border_width=1, border_color="#1e293b")
+        modal,
+        fg_color="#111827",
+        corner_radius=20,
+        border_width=1,
+        border_color="#1e293b",
+    )
     form_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
     form_frame.grid_columnconfigure(1, weight=1)
 
@@ -369,8 +373,11 @@ def open_setup_modal(save_only: bool = False):
         ctk.CTkLabel(form_frame, text=label_text, anchor="w", text_color="white").grid(
             row=row_index, column=0, padx=16, pady=10, sticky="w"
         )
-        entry_kwargs = {"fg_color": "#0f1720",
-                        "border_color": "#334155", "corner_radius": 14}
+        entry_kwargs = {
+            "fg_color": "#0f1720",
+            "border_color": "#334155",
+            "corner_radius": 14,
+        }
         if show_char is not None:
             entry_kwargs["show"] = show_char
         if placeholder is not None:
@@ -383,33 +390,33 @@ def open_setup_modal(save_only: bool = False):
                 entry.insert(0, value)
         entries[attr] = entry
 
-    ignore_var = ctk.BooleanVar(
-        value=default_values.get("STORED_IGNORE_NOTIFS", False))
-    ctk.CTkLabel(form_frame, text="Ignore Notifications:", anchor="w", text_color="white").grid(
-        row=len(fields), column=0, padx=16, pady=10, sticky="w"
-    )
+    ignore_var = ctk.BooleanVar(value=default_values.get("STORED_IGNORE_NOTIFS", False))
+    ctk.CTkLabel(
+        form_frame, text="Ignore Notifications:", anchor="w", text_color="white"
+    ).grid(row=len(fields), column=0, padx=16, pady=10, sticky="w")
     ignore_cb = ctk.CTkCheckBox(
-        form_frame, variable=ignore_var, text="Do not show notifications for this setup")
-    ignore_cb.grid(row=len(fields), column=1,
-                   padx=(0, 16), pady=10, sticky="w")
+        form_frame, variable=ignore_var, text="Do not show notifications for this setup"
+    )
+    ignore_cb.grid(row=len(fields), column=1, padx=(0, 16), pady=10, sticky="w")
 
     def store_values():
         values = [e.get().strip() for e in entries.values()]
         if not all(values):
             try:
                 messagebox.showwarning(
-                    "Warning", "Please fill in all setup fields before continuing")
+                    "Warning", "Please fill in all setup fields before continuing"
+                )
             except Exception:
                 pass
             return None
         setup_name, display_name, host, user, passwd, chat_name, enc_pass = values
-        globals()['stored_ftp_host'] = host
-        globals()['stored_ftp_user'] = user
-        globals()['stored_ftp_pass'] = passwd
-        globals()['stored_chat_name'] = chat_name
-        globals()['stored_enc_pass'] = enc_pass
-        globals()['stored_display_name'] = display_name
-        globals()['stored_ignore_notifications'] = bool(ignore_var.get())
+        globals()["stored_ftp_host"] = host
+        globals()["stored_ftp_user"] = user
+        globals()["stored_ftp_pass"] = passwd
+        globals()["stored_chat_name"] = chat_name
+        globals()["stored_enc_pass"] = enc_pass
+        globals()["stored_display_name"] = display_name
+        globals()["stored_ignore_notifications"] = bool(ignore_var.get())
         return setup_name, display_name
 
     def on_connect():
@@ -429,14 +436,13 @@ def open_setup_modal(save_only: bool = False):
             except Exception:
                 pass
             try:
-                if 'update_sidebar_connect_button' in globals():
+                if "update_sidebar_connect_button" in globals():
                     update_sidebar_connect_button(CURRENT_PROTOCOL is not None)
             except Exception:
                 pass
         except Exception as e:
             try:
-                messagebox.showerror("Connection Error",
-                                     f"Failed to connect:\n{e}")
+                messagebox.showerror("Connection Error", f"Failed to connect:\n{e}")
             except Exception:
                 pass
 
@@ -461,20 +467,20 @@ def open_setup_modal(save_only: bool = False):
     buttons.grid_columnconfigure(1, weight=1)
     buttons.grid_columnconfigure(2, weight=1)
 
-    ctk.CTkButton(buttons, text="Cancel", command=modal.destroy, fg_color="#475569").grid(
-        row=0, column=0, sticky="ew", padx=(0, 10)
-    )
+    ctk.CTkButton(
+        buttons, text="Cancel", command=modal.destroy, fg_color="#475569"
+    ).grid(row=0, column=0, sticky="ew", padx=(0, 10))
     ctk.CTkButton(buttons, text="Save", command=on_save, fg_color="#38bdf8").grid(
         row=0, column=1, sticky="ew", padx=(0, 10)
     )
     if save_only:
-        ctk.CTkButton(buttons, text="Done", command=modal.destroy, fg_color="#60a5fa").grid(
-            row=0, column=2, sticky="ew"
-        )
+        ctk.CTkButton(
+            buttons, text="Done", command=modal.destroy, fg_color="#60a5fa"
+        ).grid(row=0, column=2, sticky="ew")
     else:
-        ctk.CTkButton(buttons, text="Connect", command=on_connect, fg_color="#60a5fa").grid(
-            row=0, column=2, sticky="ew"
-        )
+        ctk.CTkButton(
+            buttons, text="Connect", command=on_connect, fg_color="#60a5fa"
+        ).grid(row=0, column=2, sticky="ew")
 
 
 def notify(title: str, message: str):
@@ -509,8 +515,7 @@ def derive_key(password: str, salt: bytes) -> bytes:
     Returns:
         bytes: A 32-byte raw key derived using PBKDF2HMAC with SHA256.
     """
-    kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32,
-                     salt=salt, iterations=100000)
+    kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100000)
     return kdf.derive(password.encode())
 
 
@@ -603,12 +608,10 @@ def send_message_non(username, message):
     For SFTP: Downloads whole file, appends new data, uploads whole file.
     """
     try:
-        conn, ssh = ftp_connect(
-            stored_ftp_host, stored_ftp_user, stored_ftp_pass)
+        conn, ssh = ftp_connect(stored_ftp_host, stored_ftp_user, stored_ftp_pass)
         file_path = normalize_chat_filename(stored_chat_name)
         ts = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M")
-        new_data = encrypt_bytes(
-            f"{ts}:{username}: {message}".rstrip()) + b"\n"
+        new_data = encrypt_bytes(f"{ts}:{username}: {message}".rstrip()) + b"\n"
         if ssh:  # SFTP
             existing_data = b""
             try:
@@ -628,20 +631,22 @@ def send_message_non(username, message):
                 # Some vsftpd servers require SSL session reuse (522). If so,
                 # retry the upload over a plain FTP connection as a pragmatic
                 # fallback (server-side fix preferred).
-                if isinstance(conn, FTP_TLS) and ("session reuse" in err or "522" in err):
+                if isinstance(conn, FTP_TLS) and (
+                    "session reuse" in err or "522" in err
+                ):
                     try:
                         plain = FTP(stored_ftp_host, timeout=10)
                         plain.login(stored_ftp_user, stored_ftp_pass)
-                        plain.storbinary(
-                            f"APPE {file_path}", BytesIO(new_data))
+                        plain.storbinary(f"APPE {file_path}", BytesIO(new_data))
                         plain.quit()
                         conn.quit()
-                        main.after(
-                            0, lambda: message_widget.delete("1.0", "end"))
+                        main.after(0, lambda: message_widget.delete("1.0", "end"))
                         read_messages()
                         try:
                             notify(
-                                f"Message sent ({username})", (message or "").strip()[:200])
+                                f"Message sent ({username})",
+                                (message or "").strip()[:200],
+                            )
                         except Exception:
                             pass
                         return
@@ -659,13 +664,14 @@ def send_message_non(username, message):
                     conn.storbinary(f"STOR {file_path}", BytesIO(combined))
                 except Exception as e2:
                     err2 = str(e2).lower()
-                    if isinstance(conn, FTP_TLS) and ("session reuse" in err2 or "522" in err2):
+                    if isinstance(conn, FTP_TLS) and (
+                        "session reuse" in err2 or "522" in err2
+                    ):
                         # Try plain FTP for the final upload
                         plain = FTP(stored_ftp_host, timeout=10)
                         try:
                             plain.login(stored_ftp_user, stored_ftp_pass)
-                            plain.storbinary(
-                                f"STOR {file_path}", BytesIO(combined))
+                            plain.storbinary(f"STOR {file_path}", BytesIO(combined))
                             plain.quit()
                         except Exception:
                             plain.quit()
@@ -683,13 +689,11 @@ def send_message_non(username, message):
         except Exception:
             pass
     except all_errors as net_err:
-        messagebox.showerror(
-            "Protocol Error", f"Transfer failed: {net_err}")
+        messagebox.showerror("Protocol Error", f"Transfer failed: {net_err}")
     except ConnectionError as conn_err:
         messagebox.showerror("Connection Error", str(conn_err))
     except Exception as e:
-        messagebox.showerror("Application Error",
-                             f"Failed to send message: {e}")
+        messagebox.showerror("Application Error", f"Failed to send message: {e}")
     finally:
         if send_button is not None:
             main.after(0, lambda: send_button.configure(state="normal"))
@@ -706,8 +710,7 @@ def read_messages_non():
     if not CONNECTED:
         return
     try:
-        conn, ssh = ftp_connect(
-            stored_ftp_host, stored_ftp_user, stored_ftp_pass)
+        conn, ssh = ftp_connect(stored_ftp_host, stored_ftp_user, stored_ftp_pass)
         file_path = normalize_chat_filename(stored_chat_name)
         if ssh:  # SFTP
             data = b""
@@ -717,8 +720,7 @@ def read_messages_non():
             except Exception:
                 data = b""
             if data:
-                lines = [decrypt_bytes(l)
-                         for l in data.splitlines() if l.strip()]
+                lines = [decrypt_bytes(l) for l in data.splitlines() if l.strip()]
                 if len(lines) > last_line_count:
                     new_lines = lines[last_line_count:]
                     main.after(0, lambda: update_ui_text("\n".join(new_lines)))
@@ -740,26 +742,33 @@ def read_messages_non():
             if current_size > last_read_byte_offset:
                 bio = BytesIO()
                 try:
-                    conn.retrbinary(f"RETR {file_path}", bio.write,
-                                    rest=last_read_byte_offset)
+                    conn.retrbinary(
+                        f"RETR {file_path}", bio.write, rest=last_read_byte_offset
+                    )
                 except Exception as e:
                     err = str(e).lower()
                     # Retry over plain FTP if FTPS rejects with session-reuse error
-                    if isinstance(conn, FTP_TLS) and ("session reuse" in err or "522" in err):
+                    if isinstance(conn, FTP_TLS) and (
+                        "session reuse" in err or "522" in err
+                    ):
                         try:
                             plain = FTP(stored_ftp_host, timeout=10)
                             plain.login(stored_ftp_user, stored_ftp_pass)
                             bio = BytesIO()
-                            plain.retrbinary(f"RETR {file_path}", bio.write,
-                                             rest=last_read_byte_offset)
+                            plain.retrbinary(
+                                f"RETR {file_path}",
+                                bio.write,
+                                rest=last_read_byte_offset,
+                            )
                             plain.quit()
                         except Exception:
                             bio = BytesIO()
                     else:
                         bio = BytesIO()
 
-                lines = [decrypt_bytes(l)
-                         for l in bio.getvalue().splitlines() if l.strip()]
+                lines = [
+                    decrypt_bytes(l) for l in bio.getvalue().splitlines() if l.strip()
+                ]
                 if lines:
                     main.after(0, lambda: update_ui_text("\n".join(lines)))
                     try:
@@ -797,14 +806,20 @@ def auto_refresh():
 def connect():
     """Establishes connection to the server and starts auto-refresh."""
     global CONNECTED, CURRENT_PROTOCOL
-    if not all([stored_ftp_host, stored_ftp_user, stored_ftp_pass, stored_chat_name, stored_enc_pass]):
-        messagebox.showwarning(
-            "Warning", "Please use Setup for connection details")
+    if not all(
+        [
+            stored_ftp_host,
+            stored_ftp_user,
+            stored_ftp_pass,
+            stored_chat_name,
+            stored_enc_pass,
+        ]
+    ):
+        messagebox.showwarning("Warning", "Please use Setup for connection details")
         return
     try:
         status_label.configure(text="Connecting...", text_color="#fbbf24")
-        conn, ssh = ftp_connect(
-            stored_ftp_host, stored_ftp_user, stored_ftp_pass)
+        conn, ssh = ftp_connect(stored_ftp_host, stored_ftp_user, stored_ftp_pass)
         CONNECTED = True
         if ssh:
             CURRENT_PROTOCOL = "SFTP"
@@ -813,7 +828,8 @@ def connect():
         else:
             CURRENT_PROTOCOL = "FTP"
         status_label.configure(
-            text=f"Connected ({CURRENT_PROTOCOL})", text_color="#4cc2ff")
+            text=f"Connected ({CURRENT_PROTOCOL})", text_color="#4cc2ff"
+        )
         if disconnect_button is not None:
             disconnect_button.configure(state="normal")
         if ssh:  # SFTP

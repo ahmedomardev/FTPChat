@@ -1,5 +1,5 @@
 """
-*Version: 2.1
+*Version: 2.2
 FTPChat - Encrypted FTP-based Messaging Protocol
 Type: Custom Proprietary License
 Author: Ahmed Omar Saad
@@ -31,23 +31,7 @@ from tkinter import messagebox
 import os
 
 import customtkinter as ctk
-from functions import connect
-from functions import disconnect
-from functions import send_messages
-from functions import init_app
-from functions import load_saved_setups
-from functions import render_saved_setups
-from functions import save_setup_entry
-from functions import stored_ftp_host
-from functions import stored_ftp_user
-from functions import stored_ftp_pass
-from functions import stored_chat_name
-from functions import stored_enc_pass
-from functions import stored_display_name
-from functions import stored_ignore_notifications
-from functions import CONNECTED
-from functions import minimize_to_tray
-from functions import disconnect_button
+import functions as core
 
 # *--- UI SETUP ---
 ctk.set_appearance_mode("dark")
@@ -63,10 +47,6 @@ main.grid_columnconfigure(0, weight=1)
 
 
 saved_setups = []
-
-
-def minimize_to_tray():
-    return minimize_to_tray()
 
 
 def change_theme(theme_name):
@@ -124,8 +104,8 @@ def open_setup_modal(save_only: bool = False):
         placeholder_text="Your name",
     )
     display_name_entry.grid(row=1, column=1, padx=(0, 16), pady=10, sticky="ew")
-    if stored_display_name:
-        display_name_entry.insert(0, stored_display_name)
+    if core.stored_display_name:
+        display_name_entry.insert(0, core.stored_display_name)
 
     ctk.CTkLabel(form_frame, text="Host:", anchor="w", text_color=label_fg).grid(
         row=2, column=0, padx=16, pady=10, sticky="w"
@@ -138,8 +118,8 @@ def open_setup_modal(save_only: bool = False):
         placeholder_text="ftps.example.com",
     )
     host_entry.grid(row=2, column=1, padx=(0, 16), pady=10, sticky="ew")
-    if stored_ftp_host:
-        host_entry.insert(0, stored_ftp_host)
+    if core.stored_ftp_host:
+        host_entry.insert(0, core.stored_ftp_host)
 
     ctk.CTkLabel(form_frame, text="FTP User:", anchor="w", text_color=label_fg).grid(
         row=3, column=0, padx=16, pady=10, sticky="w"
@@ -152,8 +132,8 @@ def open_setup_modal(save_only: bool = False):
         placeholder_text="ftp_user",
     )
     user_entry.grid(row=3, column=1, padx=(0, 16), pady=10, sticky="ew")
-    if stored_ftp_user:
-        user_entry.insert(0, stored_ftp_user)
+    if core.stored_ftp_user:
+        user_entry.insert(0, core.stored_ftp_user)
 
     ctk.CTkLabel(form_frame, text="Password:", anchor="w", text_color=label_fg).grid(
         row=4, column=0, padx=16, pady=10, sticky="w"
@@ -166,8 +146,8 @@ def open_setup_modal(save_only: bool = False):
         show="*",
     )
     passwd_entry.grid(row=4, column=1, padx=(0, 16), pady=10, sticky="ew")
-    if stored_ftp_pass:
-        passwd_entry.insert(0, stored_ftp_pass)
+    if core.stored_ftp_pass:
+        passwd_entry.insert(0, core.stored_ftp_pass)
 
     ctk.CTkLabel(form_frame, text="Chat File:", anchor="w", text_color=label_fg).grid(
         row=5, column=0, padx=16, pady=10, sticky="w"
@@ -180,8 +160,8 @@ def open_setup_modal(save_only: bool = False):
         placeholder_text="chatroom",
     )
     chat_name_entry.grid(row=5, column=1, padx=(0, 16), pady=10, sticky="ew")
-    if stored_chat_name:
-        chat_name_entry.insert(0, stored_chat_name)
+    if core.stored_chat_name:
+        chat_name_entry.insert(0, core.stored_chat_name)
 
     ctk.CTkLabel(
         form_frame, text="Encryption Key:", anchor="w", text_color=label_fg
@@ -194,10 +174,10 @@ def open_setup_modal(save_only: bool = False):
         show="*",
     )
     enc_pass_entry.grid(row=6, column=1, padx=(0, 16), pady=10, sticky="ew")
-    if stored_enc_pass:
-        enc_pass_entry.insert(0, stored_enc_pass)
+    if core.stored_enc_pass:
+        enc_pass_entry.insert(0, core.stored_enc_pass)
 
-    ignore_var = ctk.BooleanVar(value=bool(stored_ignore_notifications))
+    ignore_var = ctk.BooleanVar(value=bool(core.stored_ignore_notifications))
     ctk.CTkLabel(
         form_frame,
         text="Ignore Notifications:",
@@ -222,17 +202,25 @@ def open_setup_modal(save_only: bool = False):
 
         if not (
             setup_name
-            or display_name
-            or host
-            or user
-            or passwd
-            or chat_name
-            or enc_pass
+            and display_name
+            and host
+            and user
+            and passwd
+            and chat_name
+            and enc_pass
         ):
             messagebox.showwarning(
                 "Warning", "Please fill in all setup fields before continuing"
             )
             return None
+
+        core.stored_ftp_host = host
+        core.stored_ftp_user = user
+        core.stored_ftp_pass = passwd
+        core.stored_chat_name = chat_name
+        core.stored_enc_pass = enc_pass
+        core.stored_display_name = display_name
+        core.stored_ignore_notifications = bool(ignore_var.get())
         return setup_name, display_name
 
     def on_connect():
@@ -240,25 +228,25 @@ def open_setup_modal(save_only: bool = False):
         if not result:
             return
         modal.destroy()
-        connect()
+        core.connect()
         status_label.configure(text="Connected", text_color="green")
-        if disconnect_button is not None:
-            disconnect_button.configure(state="normal")
-        update_sidebar_connect_button(CONNECTED)
+        if core.disconnect_button is not None:
+            core.disconnect_button.configure(state="normal")
+        update_sidebar_connect_button(core.CONNECTED)
 
     def on_save():
         result = store_values()
         if not result:
             return
         setup_name, display_name = result
-        save_setup_entry(
+        core.save_setup_entry(
             setup_name,
             display_name,
-            stored_ftp_host,
-            stored_ftp_user,
-            stored_ftp_pass,
-            stored_chat_name,
-            stored_enc_pass,
+            core.stored_ftp_host,
+            core.stored_ftp_user,
+            core.stored_ftp_pass,
+            core.stored_chat_name,
+            core.stored_enc_pass,
         )
 
     buttons = ctk.CTkFrame(modal, fg_color="transparent")
@@ -337,8 +325,8 @@ sidebar_connect_button = None
 
 
 def sidebar_connect_action():
-    connect()
-    update_sidebar_connect_button(CONNECTED)
+    core.connect()
+    update_sidebar_connect_button(core.CONNECTED)
 
 
 def update_sidebar_connect_button(connected: bool):
@@ -379,7 +367,7 @@ sidebar_connect_button = ctk.CTkButton(
 sidebar_connect_button.grid(row=0, column=0, sticky="ew", padx=(0, 8), pady=(0, 16))
 
 try:
-    update_sidebar_connect_button(CONNECTED)
+    update_sidebar_connect_button(core.CONNECTED)
 except Exception:
     pass
 
@@ -495,18 +483,18 @@ send_button.grid(row=2, column=0, columnspan=2, sticky="ew", padx=18, pady=(0, 1
 
 
 def threaded_send(message: str):
-    """Send message in a background thread to avoid blocking the UI."""
+    """Send message through the core worker, which already uses a background thread."""
     text = message.strip()
     if not text:
         return
 
-    display_name = stored_display_name or "Anonymous"
-    send_messages(display_name, text)
+    display_name = core.stored_display_name or "Anonymous"
+    core.send_messages(display_name, text)
 
 
 def safe_disconnect():
     """Call disconnect() with error handling and update UI."""
-    disconnect()
+    core.disconnect()
     status_label.configure(text="Disconnected", text_color="gray")
     update_sidebar_connect_button(False)
 
@@ -522,12 +510,12 @@ def _keep_scrolling():
 
 
 try:
-    load_saved_setups()
-    render_saved_setups()
+    core.load_saved_setups()
+    core.render_saved_setups()
 except Exception:
     pass
 
-init_app(
+core.init_app(
     main,
     chat_display,
     message_widget,
@@ -549,7 +537,7 @@ def on_close():
         "Minimize to tray and keep fetching messages?\n\nYes = Minimize to tray (keep running)\nNo = Close FTPChat",
     )
     if should_minimize:
-        minimize_to_tray()
+        core.minimize_to_tray()
         return
     main.destroy()
 
