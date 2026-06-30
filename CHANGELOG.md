@@ -18,7 +18,6 @@
 - **CustomTkinter GUI** with scrollable, non-editable chat history.
 - Reworked/streamlined internals for a faster app.
 - Added/expanded **saved setup management** (including ignore notifications).
-- Added **tray minimization**.
 - Added **modal setup form**.
 - Added **SFTP → FTPS → FTP fallback** connection sequence.
 - Improved message synchronization to reduce unnecessary downloads.
@@ -28,3 +27,5 @@
 ## New in v2.2
 
 - Bug Fixes
+- Remade UI for easier use and better look
+- Notification for new releases

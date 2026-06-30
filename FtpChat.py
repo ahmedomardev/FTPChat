@@ -1,547 +1,713 @@
 """
-*Version: 2.2
+Version: 2.2
 FTPChat - Encrypted FTP-based Messaging Protocol
 Type: Custom Proprietary License
 Author: Ahmed Omar Saad
 Contact: <ahmedomardev@outlook.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the “Software”), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, and/or sublicense copies of
-the Software, subject to the following conditions:
-
-- The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-- **Commercial use of this software requires prior written permission from the author.** r
-- **The author reserves the right to relicense this software as closed-source or commercial at any time.**
-- All rights to the name “FTPChat” and its protocol specification are retained by Ahmed Omar Saad.
-
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
-AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-Notes:
-The author may offer separate commercial licenses for enterprise or closed-source use. Contact <ahmedomardev@outlook.com> for inquiries.
-This license applies to all source code, documentation, and protocol specifications included in the FTPChat project.
 """
 
-from tkinter import messagebox
-import os
-
+import time
+from random import uniform
+from time import sleep
 import customtkinter as ctk
-import functions as core
+from tkinter import messagebox
+from base64 import urlsafe_b64encode
+from datetime import datetime
+from ftplib import FTP
+from io import BytesIO
+import os
+import json
+from threading import Thread, Lock
+from webbrowser import open as open_link
+from zlib import compress, decompress
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from paramiko import SSHClient, AutoAddPolicy
+import requests
+from plyer import notification
 
-# *--- UI SETUP ---
+BG_MAIN = "#0b0f19"
+BG_CARD = "#0e1626"
+BG_INPUT = "#070b12"
+COLOR_BLUE = "#539bf5"
+COLOR_GREEN = "#22c55e"
+COLOR_BORDER = "#1b273a"
+
 ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("blue")
 
-main = ctk.CTk()
-main.title("FTPChat")
-main.geometry("1920x1080")
-main.state("zoomed")
-main.configure(fg_color="#0f1720")
-main.grid_rowconfigure(0, weight=1)
-main.grid_columnconfigure(0, weight=1)
+# *--- GLOBALS ---
+SALT = b"q6334#Q0q8294%E$(#$%^&^%$#@!#%^YHB>$W#CX>E"
+CONNECTED = False
+stored_ftp_host = stored_ftp_user = stored_ftp_pass = stored_chat_name = (
+    stored_enc_pass
+) = stored_display_name = ""
+last_read_byte_offset = 0
+last_line_count = 0
+refresh_after_id = None
+CURRENT_PROTOCOL = None
 
+net_lock = Lock()
 
 saved_setups = []
+saved_setups_file = os.path.join(os.path.dirname(__file__), "saved_setups.json")
+
+# *--- Func. ---
 
 
-def change_theme(theme_name):
-    """Changes the application appearance mode."""
-    ctk.set_appearance_mode(theme_name)
-    messagebox.showinfo("Theme Changed", f"Appearance mode changed to {theme_name}.")
+def help_func():
+    open_link("https://ahmed-omar-software-projects.mydurable.com")
 
 
-def open_setup_modal(save_only: bool = False):
-    """Opens the setup modal for entering FTP and encryption details."""
+def derive_key(password: str, salt: bytes) -> bytes:
+    kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100000)
+    return kdf.derive(password.encode())
+
+
+def encrypt_bytes(text: str) -> bytes:
+    if not stored_enc_pass:
+        return b""
+    f = Fernet(urlsafe_b64encode(derive_key(stored_enc_pass, SALT)))
+    return f.encrypt(compress(text.encode("utf-8")))
+
+
+def decrypt_bytes(data: bytes) -> str:
+    if not stored_enc_pass:
+        return ""
+    f = Fernet(urlsafe_b64encode(derive_key(stored_enc_pass, SALT)))
+    return decompress(f.decrypt(data)).decode("utf-8")
+
+
+def ftp_connect(host, user, passwd):
+    try:
+        ssh = SSHClient()
+        ssh.set_missing_host_key_policy(AutoAddPolicy())
+        ssh.connect(host, username=user, password=passwd, timeout=10)
+        sftp = ssh.open_sftp()
+        return sftp, ssh
+    except Exception:
+        pass
+    try:
+        ftp = FTP(host, timeout=10)
+        ftp.login(user, passwd)
+        return ftp, None
+    except Exception:
+        return None, None
+
+
+def send_message_non(username, message):
+    sleep(uniform(0.1, 0.4))
+    try:
+        with net_lock:
+            conn, ssh = ftp_connect(stored_ftp_host, stored_ftp_user, stored_ftp_pass)
+            if not conn:
+                raise ConnectionError("Could not reach the server.")
+
+            file_path = (
+                f"{stored_chat_name}.txt"
+                if not stored_chat_name.endswith(".txt")
+                else stored_chat_name
+            )
+            ts = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M")
+            new_data = encrypt_bytes(f"{ts}:{username}: {message}".rstrip()) + b"\n"
+
+            if ssh:
+                existing_data = b""
+                try:
+                    with conn.open(file_path, "rb") as remote_file:
+                        existing_data = remote_file.read()
+                except Exception:
+                    pass
+                with conn.open(file_path, "wb") as remote_file:
+                    remote_file.write(existing_data + new_data)
+                conn.close()
+                ssh.close()
+            else:
+                try:
+                    conn.storbinary(f"APPE {file_path}", BytesIO(new_data))
+                except Exception:
+                    bio = BytesIO()
+                    try:
+                        conn.retrbinary(f"RETR {file_path}", bio.write)
+                    except Exception:
+                        pass
+                    combined = bio.getvalue() + new_data
+                    conn.storbinary(f"STOR {file_path}", BytesIO(combined))
+                conn.quit()
+
+        main.after(0, lambda: message_widget.delete("1.0", "end"))
+        read_messages()
+    except Exception as e:
+        main.after(
+            0,
+            lambda: messagebox.showerror("Transmission Error", f"Failed to send: {e}"),
+        )
+    finally:
+        main.after(0, lambda: send_button.configure(state="normal"))
+
+
+def read_messages_non():
+    global last_read_byte_offset, last_line_count
+    if not CONNECTED:
+        return
+
+    if not net_lock.acquire(blocking=False):
+        return
+
+    try:
+        conn, ssh = ftp_connect(stored_ftp_host, stored_ftp_user, stored_ftp_pass)
+        if not conn:
+            return
+        file_path = (
+            f"{stored_chat_name}.txt"
+            if not stored_chat_name.endswith(".txt")
+            else stored_chat_name
+        )
+        my_username = stored_display_name or "Anonymous"
+
+        if ssh:
+            data = b""
+            try:
+                with conn.open(file_path, "rb") as remote_file:
+                    data = remote_file.read()
+            except Exception:
+                pass
+            if data:
+                raw_lines = [decrypt_bytes(l) for l in data.splitlines() if l.strip()]
+                lines = [
+                    (
+                        l.replace(f":{my_username}:", ":[YOU]:", 1)
+                        if f":{my_username}:" in l
+                        else l
+                    )
+                    for l in raw_lines
+                ]
+                if len(lines) > last_line_count:
+                    new_lines = lines[last_line_count:]
+                    main.after(0, lambda nl=new_lines: update_ui_text("\n".join(nl)))
+                    last_line_count = len(lines)
+            conn.close()
+            ssh.close()
+        else:
+            try:
+                current_size = conn.size(file_path)
+            except Exception:
+                conn.quit()
+                return
+            if current_size < last_read_byte_offset:
+                last_read_byte_offset = 0
+                last_line_count = 0
+
+            if current_size > last_read_byte_offset:
+                bio = BytesIO()
+                conn.retrbinary(
+                    f"RETR {file_path}", bio.write, rest=last_read_byte_offset
+                )
+                raw_lines = [
+                    decrypt_bytes(l) for l in bio.getvalue().splitlines() if l.strip()
+                ]
+                lines = [
+                    (
+                        l.replace(f":{my_username}:", ":[YOU]:", 1)
+                        if f":{my_username}:" in l
+                        else l
+                    )
+                    for l in raw_lines
+                ]
+                if lines:
+                    main.after(0, lambda lns=lines: update_ui_text("\n".join(lns)))
+                last_read_byte_offset = current_size
+            conn.quit()
+    except Exception:
+        pass
+    finally:
+        net_lock.release()
+
+
+def update_ui_text(txt):
+    if not txt:
+        return
+    chat_display.configure(state="normal")
+    chat_display.insert("end", txt + "\n")
+    chat_display.see("end")
+    chat_display.configure(state="disabled")
+
+
+def auto_refresh():
+    global refresh_after_id
+    if CONNECTED:
+        read_messages()
+        refresh_after_id = main.after(5000, auto_refresh)
+
+
+def connect():
+    global CONNECTED, CURRENT_PROTOCOL, last_read_byte_offset, last_line_count
+    if not all(
+        [
+            stored_ftp_host,
+            stored_ftp_user,
+            stored_ftp_pass,
+            stored_chat_name,
+            stored_enc_pass,
+        ]
+    ):
+        messagebox.showwarning("Warning", "Please configure profile details first.")
+        return
+    try:
+        status_label.configure(text="Connecting...", text_color="#fbbf24")
+        conn, ssh = ftp_connect(stored_ftp_host, stored_ftp_user, stored_ftp_pass)
+        if not conn:
+            raise ConnectionError("Server could not be verified.")
+
+        last_read_byte_offset = 0
+        last_line_count = 0
+
+        CONNECTED = True
+        CURRENT_PROTOCOL = "SFTP" if ssh else "FTP"
+        status_label.configure(
+            text=f"Connected ({CURRENT_PROTOCOL})", text_color=COLOR_BLUE
+        )
+
+        disconnect_button.pack(side="right", padx=5)
+
+        if ssh:
+            conn.close()
+            ssh.close()
+        else:
+            conn.quit()
+        read_messages()
+        auto_refresh()
+    except Exception as e:
+        CONNECTED = False
+        CURRENT_PROTOCOL = None
+        status_label.configure(text="Disconnected", text_color="gray")
+        disconnect_button.pack_forget()
+        messagebox.showerror("Connection Failed", str(e))
+
+
+def disconnect_handler():
+    global CONNECTED, CURRENT_PROTOCOL, refresh_after_id
+    CONNECTED = False
+    CURRENT_PROTOCOL = None
+    if refresh_after_id:
+        try:
+            main.after_cancel(refresh_after_id)
+        except Exception:
+            pass
+        refresh_after_id = None
+
+    disconnect_button.pack_forget()
+    status_label.configure(text="Disconnected", text_color="gray")
+    update_ui_text(">>> Disconnected from the server.")
+
+
+def read_messages():
+    Thread(target=read_messages_non, daemon=True).start()
+
+
+def send_messages(user, msg):
+    if not CONNECTED:
+        messagebox.showwarning("Warning", "Not connected to server")
+        return
+    if not msg.strip():
+        return
+    send_button.configure(state="disabled")
+    Thread(target=send_message_non, args=(user, msg), daemon=True).start()
+
+
+def load_saved_setups():
+    global saved_setups
+    try:
+        with open(saved_setups_file, "r", encoding="utf-8") as f:
+            saved_setups = json.load(f)
+    except Exception:
+        saved_setups = []
+
+
+def persist_saved_setups():
+    try:
+        with open(saved_setups_file, "w", encoding="utf-8") as f:
+            json.dump(saved_setups, f, indent=2)
+    except Exception as e:
+        messagebox.showerror("Save Error", f"Could not write configuration:\n{e}")
+
+
+def direct_connect_profile(setup, modal_context):
+    global stored_ftp_host, stored_ftp_user, stored_ftp_pass, stored_chat_name, stored_enc_pass, stored_display_name
+    stored_ftp_host = setup["host"]
+    stored_ftp_user = setup["user"]
+    stored_ftp_pass = setup["pass"]
+    stored_chat_name = setup["chat"]
+    stored_enc_pass = setup["enc"]
+    stored_display_name = setup.get("display_name", setup["name"])
+
+    username_entry.delete(0, "end")
+    username_entry.insert(0, stored_display_name)
+    modal_context.destroy()
+    connect()
+
+
+def delete_saved_setup(name, container, modal_context):
+    global saved_setups
+    saved_setups = [item for item in saved_setups if item["name"] != name]
+    persist_saved_setups()
+    render_saved_setups_popup(container, modal_context)
+
+
+def open_saves_modal():
     modal = ctk.CTkToplevel(main)
-    modal.title("Setup connection")
-    modal.geometry("490x490")
+    modal.title("Saved Profiles")
+    modal.geometry("550x350")
     modal.resizable(False, False)
     modal.transient(main)
     modal.grab_set()
-    modal.configure(fg_color="#0f1720")
-    modal.grid_columnconfigure(1, weight=1)
+    modal.configure(fg_color=BG_MAIN)
 
-    form_frame = ctk.CTkFrame(
+    title_label = ctk.CTkLabel(
         modal,
-        fg_color="#111827",
-        corner_radius=20,
+        text="Saved Servers",
+        font=("Segoe UI", 14, "bold"),
+        text_color="#cbd5e1",
+    )
+    title_label.pack(pady=(15, 5))
+
+    setups_container = ctk.CTkScrollableFrame(
+        modal,
+        fg_color=BG_CARD,
         border_width=1,
-        border_color="#1e293b",
+        border_color=COLOR_BORDER,
+        corner_radius=12,
     )
-    form_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
-    form_frame.grid_columnconfigure(1, weight=1)
+    setups_container.pack(fill="both", expand=True, padx=20, pady=10)
 
-    label_fg = "white"
-    entry_fg = "#0f1720"
-    entry_border = "#334155"
-    entry_radius = 14
-
-    ctk.CTkLabel(form_frame, text="Save name:", anchor="w", text_color=label_fg).grid(
-        row=0, column=0, padx=16, pady=10, sticky="w"
-    )
-    setup_name_entry = ctk.CTkEntry(
-        form_frame,
-        fg_color=entry_fg,
-        border_color=entry_border,
-        corner_radius=entry_radius,
-        placeholder_text="Home Chat",
-    )
-    setup_name_entry.grid(row=0, column=1, padx=(0, 16), pady=10, sticky="ew")
-
-    ctk.CTkLabel(
-        form_frame, text="Display Name:", anchor="w", text_color=label_fg
-    ).grid(row=1, column=0, padx=16, pady=10, sticky="w")
-    display_name_entry = ctk.CTkEntry(
-        form_frame,
-        fg_color=entry_fg,
-        border_color=entry_border,
-        corner_radius=entry_radius,
-        placeholder_text="Your name",
-    )
-    display_name_entry.grid(row=1, column=1, padx=(0, 16), pady=10, sticky="ew")
-    if core.stored_display_name:
-        display_name_entry.insert(0, core.stored_display_name)
-
-    ctk.CTkLabel(form_frame, text="Host:", anchor="w", text_color=label_fg).grid(
-        row=2, column=0, padx=16, pady=10, sticky="w"
-    )
-    host_entry = ctk.CTkEntry(
-        form_frame,
-        fg_color=entry_fg,
-        border_color=entry_border,
-        corner_radius=entry_radius,
-        placeholder_text="ftps.example.com",
-    )
-    host_entry.grid(row=2, column=1, padx=(0, 16), pady=10, sticky="ew")
-    if core.stored_ftp_host:
-        host_entry.insert(0, core.stored_ftp_host)
-
-    ctk.CTkLabel(form_frame, text="FTP User:", anchor="w", text_color=label_fg).grid(
-        row=3, column=0, padx=16, pady=10, sticky="w"
-    )
-    user_entry = ctk.CTkEntry(
-        form_frame,
-        fg_color=entry_fg,
-        border_color=entry_border,
-        corner_radius=entry_radius,
-        placeholder_text="ftp_user",
-    )
-    user_entry.grid(row=3, column=1, padx=(0, 16), pady=10, sticky="ew")
-    if core.stored_ftp_user:
-        user_entry.insert(0, core.stored_ftp_user)
-
-    ctk.CTkLabel(form_frame, text="Password:", anchor="w", text_color=label_fg).grid(
-        row=4, column=0, padx=16, pady=10, sticky="w"
-    )
-    passwd_entry = ctk.CTkEntry(
-        form_frame,
-        fg_color=entry_fg,
-        border_color=entry_border,
-        corner_radius=entry_radius,
-        show="*",
-    )
-    passwd_entry.grid(row=4, column=1, padx=(0, 16), pady=10, sticky="ew")
-    if core.stored_ftp_pass:
-        passwd_entry.insert(0, core.stored_ftp_pass)
-
-    ctk.CTkLabel(form_frame, text="Chat File:", anchor="w", text_color=label_fg).grid(
-        row=5, column=0, padx=16, pady=10, sticky="w"
-    )
-    chat_name_entry = ctk.CTkEntry(
-        form_frame,
-        fg_color=entry_fg,
-        border_color=entry_border,
-        corner_radius=entry_radius,
-        placeholder_text="chatroom",
-    )
-    chat_name_entry.grid(row=5, column=1, padx=(0, 16), pady=10, sticky="ew")
-    if core.stored_chat_name:
-        chat_name_entry.insert(0, core.stored_chat_name)
-
-    ctk.CTkLabel(
-        form_frame, text="Encryption Key:", anchor="w", text_color=label_fg
-    ).grid(row=6, column=0, padx=16, pady=10, sticky="w")
-    enc_pass_entry = ctk.CTkEntry(
-        form_frame,
-        fg_color=entry_fg,
-        border_color=entry_border,
-        corner_radius=entry_radius,
-        show="*",
-    )
-    enc_pass_entry.grid(row=6, column=1, padx=(0, 16), pady=10, sticky="ew")
-    if core.stored_enc_pass:
-        enc_pass_entry.insert(0, core.stored_enc_pass)
-
-    ignore_var = ctk.BooleanVar(value=bool(core.stored_ignore_notifications))
-    ctk.CTkLabel(
-        form_frame,
-        text="Ignore Notifications:",
-        anchor="w",
-        text_color=label_fg,
-    ).grid(row=7, column=0, padx=16, pady=10, sticky="w")
-    ignore_cb = ctk.CTkCheckBox(
-        form_frame,
-        variable=ignore_var,
-        text="Do not show notifications for this setup",
-    )
-    ignore_cb.grid(row=7, column=1, padx=(0, 16), pady=10, sticky="w")
-
-    def store_values():
-        setup_name = setup_name_entry.get().strip()
-        display_name = display_name_entry.get().strip()
-        host = host_entry.get().strip()
-        user = user_entry.get().strip()
-        passwd = passwd_entry.get().strip()
-        chat_name = chat_name_entry.get().strip()
-        enc_pass = enc_pass_entry.get().strip()
-
-        if not (
-            setup_name
-            and display_name
-            and host
-            and user
-            and passwd
-            and chat_name
-            and enc_pass
-        ):
-            messagebox.showwarning(
-                "Warning", "Please fill in all setup fields before continuing"
-            )
-            return None
-
-        core.stored_ftp_host = host
-        core.stored_ftp_user = user
-        core.stored_ftp_pass = passwd
-        core.stored_chat_name = chat_name
-        core.stored_enc_pass = enc_pass
-        core.stored_display_name = display_name
-        core.stored_ignore_notifications = bool(ignore_var.get())
-        return setup_name, display_name
-
-    def on_connect():
-        result = store_values()
-        if not result:
-            return
-        modal.destroy()
-        core.connect()
-        status_label.configure(text="Connected", text_color="green")
-        if core.disconnect_button is not None:
-            core.disconnect_button.configure(state="normal")
-        update_sidebar_connect_button(core.CONNECTED)
-
-    def on_save():
-        result = store_values()
-        if not result:
-            return
-        setup_name, display_name = result
-        core.save_setup_entry(
-            setup_name,
-            display_name,
-            core.stored_ftp_host,
-            core.stored_ftp_user,
-            core.stored_ftp_pass,
-            core.stored_chat_name,
-            core.stored_enc_pass,
-        )
-
-    buttons = ctk.CTkFrame(modal, fg_color="transparent")
-    buttons.grid(row=1, column=0, pady=(0, 20), padx=20, sticky="ew")
-    buttons.grid_columnconfigure(0, weight=1)
-    buttons.grid_columnconfigure(1, weight=1)
-    buttons.grid_columnconfigure(2, weight=1)
-
-    ctk.CTkButton(
-        buttons,
-        text="Cancel",
-        command=modal.destroy,
-        fg_color="#475569",
-    ).grid(row=0, column=0, sticky="ew", padx=(0, 10))
-    ctk.CTkButton(
-        buttons,
-        text="Save",
-        command=on_save,
-        fg_color="#38bdf8",
-    ).grid(row=0, column=1, sticky="ew", padx=(0, 10))
-
-    if save_only:
-        ctk.CTkButton(
-            buttons,
-            text="Done",
-            command=modal.destroy,
-            fg_color="#60a5fa",
-        ).grid(row=0, column=2, sticky="ew")
-    else:
-        ctk.CTkButton(
-            buttons,
-            text="Connect",
-            command=on_connect,
-            fg_color="#60a5fa",
-        ).grid(row=0, column=2, sticky="ew")
+    render_saved_setups_popup(setups_container, modal)
 
 
-app_frame = ctk.CTkFrame(main, fg_color="#111827", corner_radius=30, border_width=0)
-app_frame.grid(row=0, column=0, sticky="nsew", padx=24, pady=24)
-app_frame.grid_rowconfigure(0, weight=1)
-app_frame.grid_columnconfigure(0, weight=0)
-app_frame.grid_columnconfigure(1, weight=1)
+def render_saved_setups_popup(container, modal_context):
+    for child in container.winfo_children():
+        child.destroy()
 
-sidebar = ctk.CTkFrame(
-    app_frame,
-    fg_color="#111827",
-    corner_radius=24,
-    border_width=1,
-    border_color="#1e293b",
-)
-sidebar.grid(row=0, column=0, sticky="nsew", padx=(0, 16), pady=0)
-sidebar.grid_rowconfigure(5, weight=1)
-sidebar.grid_columnconfigure(0, weight=1)
-
-ctk.CTkLabel(
-    sidebar,
-    text="FTPChat",
-    font=("Segoe UI Variable", 24, "bold"),
-    text_color="white",
-).grid(row=0, column=0, sticky="w", padx=24, pady=(24, 4))
-
-ctk.CTkLabel(
-    sidebar,
-    text="",
-    font=("Segoe UI Variable", 12),
-    text_color="#94a3b8",
-).grid(row=1, column=0, sticky="w", padx=24, pady=(0, 20))
-
-button_bar = ctk.CTkFrame(sidebar, fg_color="transparent")
-button_bar.grid(row=2, column=0, sticky="ew", padx=24)
-button_bar.grid_columnconfigure(0, weight=1)
-button_bar.grid_columnconfigure(1, weight=1)
-button_bar.grid_columnconfigure(2, weight=1)
-
-sidebar_connect_button = None
-
-
-def sidebar_connect_action():
-    core.connect()
-    update_sidebar_connect_button(core.CONNECTED)
-
-
-def update_sidebar_connect_button(connected: bool):
-    global sidebar_connect_button
-    if sidebar_connect_button is None:
+    if not saved_setups:
+        ctk.CTkLabel(
+            container, text="No saved server configurations found.", text_color="gray"
+        ).pack(pady=40)
         return
-    if connected:
-        sidebar_connect_button.configure(
-            text="Disconnect",
+
+    for setup in saved_setups:
+        row_frame = ctk.CTkFrame(
+            container,
+            fg_color=BG_INPUT,
+            corner_radius=8,
+            border_width=1,
+            border_color=COLOR_BORDER,
+        )
+        row_frame.pack(fill="x", pady=5, padx=5)
+
+        ctk.CTkLabel(
+            row_frame,
+            text=f"{setup['name']} ({setup.get('display_name')})",
+            text_color="white",
+            anchor="w",
+        ).pack(side="left", padx=15, pady=8, fill="x", expand=True)
+
+        ctk.CTkButton(
+            row_frame,
+            text="Save & Connect",
+            font=("Segoe UI", 11, "bold"),
+            width=110,
+            height=28,
+            fg_color=COLOR_GREEN,
+            hover_color="#16a34a",
+            command=lambda s=setup: direct_connect_profile(s, modal_context),
+        ).pack(side="right", padx=5)
+        ctk.CTkButton(
+            row_frame,
+            text="Delete",
+            font=("Segoe UI", 11),
+            width=60,
+            height=28,
             fg_color="#ef4444",
             hover_color="#dc2626",
-            command=lambda: safe_disconnect(),
+            command=lambda n=setup["name"]: delete_saved_setup(
+                n, container, modal_context
+            ),
+        ).pack(side="right", padx=(5, 10))
+
+
+def check_github_releases_loop():
+    REPO = "ahmedomardev/FTPChat"
+    API_URL = f"https://api.github.com/repos/{REPO}/releases/latest"
+    CACHE_FILE = os.path.join(os.path.dirname(__file__), "latest_release.json")
+
+    try:
+        with open(CACHE_FILE, "r") as f:
+            last_seen = json.load(f).get("tag_name")
+    except FileNotFoundError:
+        last_seen = None
+
+    while True:
+        try:
+            r = requests.get(API_URL, timeout=10)
+            if r.status_code == 200:
+                latest = r.json()["tag_name"]
+                if latest != last_seen:
+                    notification.notify(
+                        title="🚀 New GitHub Release!",
+                        message=f"{REPO} latest release: {latest}",
+                        timeout=10,
+                    )
+                    with open(CACHE_FILE, "w") as f:
+                        json.dump({"tag_name": latest}, f)
+                    last_seen = latest
+        except Exception as e:
+            print("Release Monitor Exception:", e)
+
+        time.sleep(3600)
+
+
+# *--- UI SETUP ---
+
+main = ctk.CTk()
+main.title("FTPChat")
+main.geometry("1980x1080")
+main.configure(fg_color=BG_MAIN)
+
+top_card = ctk.CTkFrame(
+    main, fg_color=BG_CARD, corner_radius=18, border_width=1, border_color=COLOR_BORDER
+)
+top_card.pack(fill="x", padx=15, pady=15)
+
+top_row = ctk.CTkFrame(top_card, fg_color="transparent")
+top_row.pack(fill="x", padx=15, pady=15)
+
+ctk.CTkLabel(
+    top_row,
+    text="Username:",
+    font=("Segoe UI", 12, "bold"),
+    text_color="white",
+).pack(side="left", padx=(5, 5))
+username_entry = ctk.CTkEntry(
+    top_row,
+    fg_color=BG_INPUT,
+    border_color=COLOR_BORDER,
+    corner_radius=10,
+    placeholder_text="Anonymous",
+)
+username_entry.pack(side="left", fill="x", expand=True, padx=5)
+
+status_label = ctk.CTkLabel(
+    top_row, text="Disconnected", text_color="gray", font=("Segoe UI", 12, "bold")
+)
+status_label.pack(side="right", padx=15)
+
+
+def open_setup_modal():
+    modal = ctk.CTkToplevel(main)
+    modal.title("Configure New Server")
+    modal.geometry("500x380")
+    modal.resizable(False, False)
+    modal.transient(main)
+    modal.grab_set()
+    modal.configure(fg_color=BG_MAIN)
+
+    fields = [
+        ("Profile Name:", "SETUP_NAME", None),
+        ("Server IP / Hostname:", "STORED_FTP_HOST", None),
+        ("Server Username:", "STORED_FTP_USER", None),
+        ("Server Password:", "STORED_FTP_PASS", "*"),
+        ("Chat Room File (.txt):", "STORED_CHAT_NAME", None),
+        ("Encryption Password:", "STORED_ENC_PASS", "*"),
+    ]
+    entries = {}
+
+    form = ctk.CTkFrame(
+        modal,
+        fg_color=BG_CARD,
+        corner_radius=14,
+        border_width=1,
+        border_color=COLOR_BORDER,
+    )
+    form.pack(fill="both", expand=True, padx=15, pady=15)
+
+    for idx, (label_text, attr, mask) in enumerate(fields):
+        ctk.CTkLabel(form, text=label_text, text_color="#cbd5e1", anchor="w").grid(
+            row=idx, column=0, padx=15, pady=8, sticky="w"
         )
-    else:
-        sidebar_connect_button.configure(
-            text="Connect",
-            fg_color="#22c55e",
-            hover_color="#16a34a",
-            command=sidebar_connect_action,
+        ent = ctk.CTkEntry(
+            form,
+            show=mask,
+            fg_color=BG_INPUT,
+            border_color=COLOR_BORDER,
+            corner_radius=8,
+            width=240,
         )
+        ent.grid(row=idx, column=1, padx=15, pady=8, sticky="ew")
+
+        if attr == "STORED_FTP_HOST" and stored_ftp_host:
+            ent.insert(0, stored_ftp_host)
+        if attr == "STORED_FTP_USER" and stored_ftp_user:
+            ent.insert(0, stored_ftp_user)
+        if attr == "STORED_FTP_PASS" and stored_ftp_pass:
+            ent.insert(0, stored_ftp_pass)
+        if attr == "STORED_CHAT_NAME" and stored_chat_name:
+            ent.insert(0, stored_chat_name)
+        if attr == "STORED_ENC_PASS" and stored_enc_pass:
+            ent.insert(0, stored_enc_pass)
+        entries[attr] = ent
+
+    def on_save_profile():
+        vals = {k: e.get().strip() for k, e in entries.items()}
+        if not all(vals.values()):
+            messagebox.showwarning(
+                "Warning", "All parameters must be filled before committing data."
+            )
+            return
+
+        global stored_ftp_host, stored_ftp_user, stored_ftp_pass, stored_chat_name, stored_enc_pass, stored_display_name
+        stored_ftp_host = vals["STORED_FTP_HOST"]
+        stored_ftp_user = vals["STORED_FTP_USER"]
+        stored_ftp_pass = vals["STORED_FTP_PASS"]
+        stored_chat_name = vals["STORED_CHAT_NAME"]
+        stored_enc_pass = vals["STORED_ENC_PASS"]
+        stored_display_name = username_entry.get().strip() or "Anonymous"
+
+        new_profile = {
+            "name": vals["SETUP_NAME"],
+            "display_name": stored_display_name,
+            "host": stored_ftp_host,
+            "user": stored_ftp_user,
+            "pass": stored_ftp_pass,
+            "chat": stored_chat_name,
+            "enc": stored_enc_pass,
+        }
+
+        global saved_setups
+        saved_setups = [
+            item for item in saved_setups if item["name"] != vals["SETUP_NAME"]
+        ]
+        saved_setups.append(new_profile)
+        persist_saved_setups()
+        modal.destroy()
+        connect()
+
+    btn_row = ctk.CTkFrame(modal, fg_color="transparent")
+    btn_row.pack(fill="x", pady=(0, 15))
+    ctk.CTkButton(
+        btn_row,
+        text="Save & Connect",
+        fg_color=COLOR_BLUE,
+        hover_color="#3b82f6",
+        command=on_save_profile,
+    ).pack(side="left", expand=True, padx=10)
+    ctk.CTkButton(
+        btn_row,
+        text="Cancel",
+        fg_color="#475569",
+        hover_color="#334155",
+        command=modal.destroy,
+    ).pack(side="left", expand=True, padx=10)
 
 
 ctk.CTkButton(
-    button_bar,
+    top_row,
+    text="Saves",
+    fg_color="#334155",
+    hover_color="#1e293b",
+    corner_radius=10,
+    width=150,
+    command=open_saves_modal,
+).pack(side="right", padx=5)
+
+ctk.CTkButton(
+    top_row,
     text="Setup",
-    fg_color="#60a5fa",
+    fg_color=COLOR_BLUE,
     hover_color="#3b82f6",
+    corner_radius=10,
+    width=120,
     command=open_setup_modal,
-).grid(row=0, column=1, sticky="ew", padx=(0, 8), pady=(0, 16))
+).pack(side="right", padx=5)
 
-sidebar_connect_button = ctk.CTkButton(
-    button_bar,
-    text="Connect",
-    fg_color="#22c55e",
-    hover_color="#16a34a",
-    command=sidebar_connect_action,
+disconnect_button = ctk.CTkButton(
+    top_row,
+    text="Disconnect",
+    fg_color="#ef4444",
+    hover_color="#dc2626",
+    corner_radius=10,
+    width=140,
+    command=disconnect_handler,
 )
-sidebar_connect_button.grid(row=0, column=0, sticky="ew", padx=(0, 8), pady=(0, 16))
 
-try:
-    update_sidebar_connect_button(core.CONNECTED)
-except Exception:
-    pass
-
-ctk.CTkLabel(
-    sidebar,
-    text="Saved servers",
-    font=("Segoe UI Variable", 14, "bold"),
-    text_color="white",
-).grid(row=3, column=0, sticky="w", padx=24, pady=(0, 8))
-
-saved_setups_container = ctk.CTkScrollableFrame(
-    sidebar,
-    fg_color="#0f1720",
-    border_width=1,
-    border_color="#334155",
-    corner_radius=20,
-    height=440,
+# *Chat Display Card Area
+ctk.CTkLabel(main, text="Chat", font=("Segoe UI", 12, "bold"), text_color="white").pack(
+    anchor="w", padx=20, pady=(5, 2)
 )
-saved_setups_container.grid(row=4, column=0, sticky="nsew", padx=24, pady=(0, 24))
-saved_setups_container.grid_columnconfigure(0, weight=1)
 
-chat_panel = ctk.CTkFrame(
-    app_frame,
-    fg_color="#0f1720",
-    corner_radius=24,
-    border_width=1,
-    border_color="#1e293b",
+chat_card = ctk.CTkFrame(
+    main, fg_color=BG_CARD, corner_radius=18, border_width=1, border_color=COLOR_BORDER
 )
-chat_panel.grid(row=0, column=1, sticky="nsew")
-chat_panel.grid_rowconfigure(3, weight=1)
-chat_panel.grid_columnconfigure(0, weight=1)
-
-chat_header = ctk.CTkFrame(
-    chat_panel,
-    fg_color="#111827",
-    corner_radius=24,
-    border_width=1,
-    border_color="#1e293b",
-)
-chat_header.grid(row=0, column=0, sticky="ew", padx=24, pady=24)
-chat_header.grid_columnconfigure(0, weight=1)
-chat_header.grid_columnconfigure(1, weight=0)
-
-chat_title = ctk.CTkLabel(
-    chat_header,
-    text="Conversation",
-    font=("Segoe UI Variable", 22, "bold"),
-    text_color="white",
-)
-chat_title.grid(row=0, column=0, sticky="w", padx=(20, 0), pady=(20, 4))
-
-status_label = ctk.CTkLabel(
-    chat_header,
-    text="Disconnected",
-    font=("Segoe UI Variable", 12),
-    text_color="#94a3b8",
-)
-status_label.grid(row=1, column=0, sticky="w", padx=(20, 0), pady=(0, 20))
+chat_card.pack(fill="both", expand=True, padx=15, pady=5)
 
 chat_display = ctk.CTkTextbox(
-    chat_panel,
-    corner_radius=24,
-    border_width=1,
-    border_color="#334155",
-    fg_color="#0b1720",
-    text_color="white",
-    height=240,
+    chat_card,
+    fg_color=BG_INPUT,
+    border_color=COLOR_BORDER,
+    text_color="#e2e8f0",
+    font=("Consolas", 12),
+    corner_radius=14,
 )
-chat_display.grid(row=1, column=0, sticky="nsew", padx=24, pady=(0, 16))
+chat_display.pack(fill="both", expand=True, padx=10, pady=10)
 chat_display.configure(state="disabled")
-chat_display.see("end")
 
-message_card = ctk.CTkFrame(
-    chat_panel,
-    fg_color="#111827",
-    corner_radius=24,
-    border_width=1,
-    border_color="#334155",
-)
-message_card.grid(row=2, column=0, sticky="ew", padx=24, pady=(0, 24))
-message_card.grid_columnconfigure(0, weight=1)
-message_card.grid_columnconfigure(1, weight=0)
-
+# *Message Input Card Area
 ctk.CTkLabel(
-    message_card,
-    text="Message",
-    font=("Segoe UI Variable", 12, "bold"),
-    text_color="#cbd5e1",
-).grid(row=0, column=0, sticky="w", padx=18, pady=(18, 8))
+    main,
+    text="Write your message below:",
+    font=("Segoe UI", 12, "bold"),
+    text_color="white",
+).pack(anchor="w", padx=20, pady=(10, 2))
+
+msg_card = ctk.CTkFrame(
+    main, fg_color=BG_CARD, corner_radius=18, border_width=1, border_color=COLOR_BORDER
+)
+msg_card.pack(fill="x", padx=15, pady=(5, 15))
 
 message_widget = ctk.CTkTextbox(
-    message_card,
-    height=200,
-    corner_radius=18,
-    border_width=2,
-    border_color="#334155",
-    fg_color="#0b1720",
+    msg_card,
+    height=70,
+    fg_color=BG_INPUT,
+    border_color=COLOR_BORDER,
     text_color="white",
+    font=("Segoe UI", 12),
+    corner_radius=14,
 )
-message_widget.grid(row=1, column=0, sticky="nsew", padx=18, pady=(0, 16))
-message_widget.see("end")
+message_widget.pack(fill="x", side="top", padx=10, pady=(10, 5))
 
 send_button = ctk.CTkButton(
-    message_card,
-    text="Send",
-    height=35,
-    fg_color="#60a5fa",
+    msg_card,
+    text="Send Message",
+    height=30,
+    fg_color=COLOR_BLUE,
     hover_color="#3b82f6",
-    font=("Segoe UI Variable", 13, "bold"),
-    command=lambda: threaded_send(message_widget.get("1.0", "end-1c")),
+    corner_radius=14,
+    font=("Segoe UI", 13, "bold"),
+    command=lambda: send_messages(
+        username_entry.get().strip() or "Anonymous", message_widget.get("1.0", "end-1c")
+    ),
 )
-send_button.grid(row=2, column=0, columnspan=2, sticky="ew", padx=18, pady=(0, 16))
+send_button.pack(fill="x", side="top", padx=10, pady=(0, 10))
 
 
-def threaded_send(message: str):
-    """Send message through the core worker, which already uses a background thread."""
-    text = message.strip()
-    if not text:
-        return
-
-    display_name = core.stored_display_name or "Anonymous"
-    core.send_messages(display_name, text)
-
-
-def safe_disconnect():
-    """Call disconnect() with error handling and update UI."""
-    core.disconnect()
-    status_label.configure(text="Disconnected", text_color="gray")
-    update_sidebar_connect_button(False)
-
-
-def _on_return(event=None):
-    threaded_send(message_widget.get("1.0", "end-1c"))
+def send_handler_event(event):
+    send_button.invoke()
     return "break"
 
 
-def _keep_scrolling():
-    chat_display.see("end")
-    main.after(1000, _keep_scrolling)
+message_widget.bind("<Return>", send_handler_event)
 
+load_saved_setups()
 
-try:
-    core.load_saved_setups()
-    core.render_saved_setups()
-except Exception:
-    pass
+# Launch the release listener inside a non-blocking background daemon thread
+Thread(target=check_github_releases_loop, daemon=True).start()
 
-core.init_app(
-    main,
-    chat_display,
-    message_widget,
-    send_button,
-    None,
-    status_label,
-    None,
-    saved_setups_container,
-    chat_title,
-    os.path.join(os.path.dirname(__file__), "saved_setups.json"),
-)
-
-_keep_scrolling()
-
-
-def on_close():
-    should_minimize = messagebox.askyesno(
-        "Exit FTPChat",
-        "Minimize to tray and keep fetching messages?\n\nYes = Minimize to tray (keep running)\nNo = Close FTPChat",
-    )
-    if should_minimize:
-        core.minimize_to_tray()
-        return
-    main.destroy()
-
-
-main.protocol("WM_DELETE_WINDOW", on_close)
-main.bind("<Return>", _on_return)
 main.mainloop()
