@@ -27,6 +27,9 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from paramiko import SSHClient, AutoAddPolicy
 import requests
 
+# *--- VERSION CONFIG ---
+CURRENT_VERSION = "2.2"  # Keeps track of this specific executable's version
+
 BG_MAIN = "#0b0f19"
 BG_CARD = "#0e1626"
 BG_INPUT = "#070b12"
@@ -452,11 +455,17 @@ def render_saved_setups_popup(container, modal_context):
 
 
 def trigger_ui_update_alert(repo, tag):
-    # Pure TK/CTK Standard UI Message Box
     messagebox.showinfo(
         "🚀 Update Available",
         f"A new release has been detected on GitHub!\n\nRepository: {repo}\nLatest Version: {tag}\n\nPlease update your application client.",
     )
+
+
+def clean_version(v):
+    """Strips formatting characters like 'v' and spaces to accurately compare versions."""
+    if not v:
+        return ""
+    return str(v).strip().lower().lstrip("v")
 
 
 def check_github_releases_loop():
@@ -468,7 +477,7 @@ def check_github_releases_loop():
     try:
         with open(CACHE_FILE, "r") as f:
             last_seen = json.load(f).get("tag_name")
-    except FileNotFoundError:
+    except Exception:
         last_seen = None
 
     while True:
@@ -476,13 +485,21 @@ def check_github_releases_loop():
             r = requests.get(API_URL, timeout=10)
             if r.status_code == 200:
                 latest = r.json()["tag_name"]
-                if latest != last_seen:
-                    # Safely pushes the execution command into the main app thread loop
+
+                # Check 1: Ensure the online version is NOT the version we are currently running.
+                # Check 2: Ensure we haven't already alerted the user about this version in a prior check.
+                if (
+                    clean_version(latest) != clean_version(CURRENT_VERSION)
+                    and latest != last_seen
+                ):
                     main.after(0, lambda: trigger_ui_update_alert(REPO, latest))
 
-                    with open(CACHE_FILE, "w") as f:
-                        json.dump({"tag_name": latest}, f)
-                    last_seen = latest
+                    try:
+                        with open(CACHE_FILE, "w") as f:
+                            json.dump({"tag_name": latest}, f)
+                        last_seen = latest
+                    except Exception:
+                        pass
         except Exception as e:
             print("Release Monitor Exception:", e)
 
@@ -532,7 +549,7 @@ def open_setup_modal():
     modal.resizable(False, False)
     modal.transient(main)
     modal.grab_set()
-    modal.configure(fg_color=BG_MAIN)
+    modal.configure = BG_MAIN
 
     fields = [
         ("Profile Name:", "SETUP_NAME", None),
@@ -730,8 +747,6 @@ def send_handler_event(event):
 message_widget.bind("<Return>", send_handler_event)
 
 load_saved_setups()
-
-# Launch the release listener inside a non-blocking background daemon thread
 Thread(target=check_github_releases_loop, daemon=True).start()
 
 main.mainloop()
