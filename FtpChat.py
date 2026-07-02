@@ -16,6 +16,7 @@ from datetime import datetime
 from ftplib import FTP
 from io import BytesIO
 import os
+import sys
 import json
 from threading import Thread, Lock
 from webbrowser import open as open_link
@@ -25,7 +26,6 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from paramiko import SSHClient, AutoAddPolicy
 import requests
-from plyer import notification
 
 BG_MAIN = "#0b0f19"
 BG_CARD = "#0e1626"
@@ -50,7 +50,15 @@ CURRENT_PROTOCOL = None
 net_lock = Lock()
 
 saved_setups = []
-saved_setups_file = os.path.join(os.path.dirname(__file__), "saved_setups.json")
+
+# Determine the absolute path safely, even if compiled to an .exe
+if getattr(sys, "frozen", False):
+    base_dir = os.path.dirname(sys.executable)
+else:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Both configurations now use the absolute safe directory
+saved_setups_file = os.path.join(base_dir, "saved_setups.json")
 
 # *--- Func. ---
 
@@ -74,8 +82,17 @@ def encrypt_bytes(text: str) -> bytes:
 def decrypt_bytes(data: bytes) -> str:
     if not stored_enc_pass:
         return ""
-    f = Fernet(urlsafe_b64encode(derive_key(stored_enc_pass, SALT)))
-    return decompress(f.decrypt(data)).decode("utf-8")
+    try:
+        f = Fernet(urlsafe_b64encode(derive_key(stored_enc_pass, SALT)))
+        return decompress(f.decrypt(data)).decode("utf-8")
+    except Exception:
+        try:
+            decoded = data.decode("utf-8", errors="ignore").strip()
+            if decoded:
+                return f"[Plaintext/Wrong Password]: {decoded}"
+        except Exception:
+            pass
+        return "[Decryption Error - Corrupted Data]"
 
 
 def ftp_connect(host, user, passwd):
@@ -434,10 +451,19 @@ def render_saved_setups_popup(container, modal_context):
         ).pack(side="right", padx=(5, 10))
 
 
+def trigger_ui_update_alert(repo, tag):
+    # Pure TK/CTK Standard UI Message Box
+    messagebox.showinfo(
+        "🚀 Update Available",
+        f"A new release has been detected on GitHub!\n\nRepository: {repo}\nLatest Version: {tag}\n\nPlease update your application client.",
+    )
+
+
 def check_github_releases_loop():
     REPO = "ahmedomardev/FTPChat"
     API_URL = f"https://api.github.com/repos/{REPO}/releases/latest"
-    CACHE_FILE = os.path.join(os.path.dirname(__file__), "latest_release.json")
+
+    CACHE_FILE = os.path.join(base_dir, "latest_release.json")
 
     try:
         with open(CACHE_FILE, "r") as f:
@@ -451,11 +477,9 @@ def check_github_releases_loop():
             if r.status_code == 200:
                 latest = r.json()["tag_name"]
                 if latest != last_seen:
-                    notification.notify(
-                        title="🚀 New GitHub Release!",
-                        message=f"{REPO} latest release: {latest}",
-                        timeout=10,
-                    )
+                    # Safely pushes the execution command into the main app thread loop
+                    main.after(0, lambda: trigger_ui_update_alert(REPO, latest))
+
                     with open(CACHE_FILE, "w") as f:
                         json.dump({"tag_name": latest}, f)
                     last_seen = latest
