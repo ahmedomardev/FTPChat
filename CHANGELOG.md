@@ -28,4 +28,3 @@
 
 - Bug Fixes
 - Remade UI for easier use and better look
-- Notification for new releases

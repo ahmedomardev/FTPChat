@@ -25,7 +25,6 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from paramiko import SSHClient, AutoAddPolicy
-import requests
 
 # *--- VERSION CONFIG ---
 CURRENT_VERSION = "2.2"
@@ -454,58 +453,6 @@ def render_saved_setups_popup(container, modal_context):
         ).pack(side="right", padx=(5, 10))
 
 
-def trigger_ui_update_alert(repo, tag):
-    messagebox.showinfo(
-        "🚀 Update Available",
-        f"A new release has been detected on GitHub!\n\nRepository: {repo}\nLatest Version: {tag}\n\nPlease update your application client.",
-    )
-
-
-def clean_version(v):
-    """Strips formatting characters like 'v' and spaces to accurately compare versions."""
-    if not v:
-        return ""
-    return str(v).strip().lower().lstrip("v")
-
-
-def check_github_releases_loop():
-    REPO = "ahmedomardev/FTPChat"
-    API_URL = f"https://api.github.com/repos/{REPO}/releases/latest"
-
-    CACHE_FILE = os.path.join(base_dir, "latest_release.json")
-
-    try:
-        with open(CACHE_FILE, "r") as f:
-            last_seen = json.load(f).get("tag_name")
-    except Exception:
-        last_seen = None
-
-    while True:
-        try:
-            r = requests.get(API_URL, timeout=10)
-            if r.status_code == 200:
-                latest = r.json()["tag_name"]
-
-                # Check 1: Ensure the online version is NOT the version we are currently running.
-                # Check 2: Ensure we haven't already alerted the user about this version in a prior check.
-                if (
-                    clean_version(latest) != clean_version(CURRENT_VERSION)
-                    and latest != last_seen
-                ):
-                    main.after(0, lambda: trigger_ui_update_alert(REPO, latest))
-
-                    try:
-                        with open(CACHE_FILE, "w") as f:
-                            json.dump({"tag_name": latest}, f)
-                        last_seen = latest
-                    except Exception:
-                        pass
-        except Exception as e:
-            print("Release Monitor Exception:", e)
-
-        time.sleep(3600)
-
-
 # *--- UI SETUP ---
 
 main = ctk.CTk()
@@ -747,6 +694,5 @@ def send_handler_event(event):
 message_widget.bind("<Return>", send_handler_event)
 
 load_saved_setups()
-Thread(target=check_github_releases_loop, daemon=True).start()
 
 main.mainloop()
