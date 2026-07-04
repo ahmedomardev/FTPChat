@@ -1,0 +1,11 @@
+[
+  {
+    "name": "Home",
+    "display_name": "Ahmed",
+    "host": "192.168.1.1",
+    "user": "admin",
+    "pass": "*700800*Ahmed",
+    "chat": "/usb1_1/chat1",
+    "enc": "0000"
+  }
+]

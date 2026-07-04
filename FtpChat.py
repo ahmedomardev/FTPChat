@@ -28,7 +28,7 @@ from paramiko import SSHClient, AutoAddPolicy
 import requests
 
 # *--- VERSION CONFIG ---
-CURRENT_VERSION = "2.2"  # Keeps track of this specific executable's version
+CURRENT_VERSION = "2.2"
 
 BG_MAIN = "#0b0f19"
 BG_CARD = "#0e1626"
@@ -432,9 +432,9 @@ def render_saved_setups_popup(container, modal_context):
 
         ctk.CTkButton(
             row_frame,
-            text="Save & Connect",
+            text="Connect",
             font=("Segoe UI", 11, "bold"),
-            width=110,
+            width=60,
             height=28,
             fg_color=COLOR_GREEN,
             hover_color="#16a34a",
