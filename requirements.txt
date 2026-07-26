@@ -1,6 +1,3 @@
-customtkinter
+flet
 cryptography
 paramiko
-plyer
-pystray
-Pillow

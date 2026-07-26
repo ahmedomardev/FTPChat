@@ -1,148 +1,126 @@
 # FTPChat
 
-## Encrypted FTP-based Messaging Protocol
-
-**Version: 2.2**  
-**Type:** Custom Proprietary License  
-**Author:** Ahmed Omar Saad  
-**Contact:** <ahmedomardev@outlook.com>
+### _Lightweight, End-to-End Encrypted FTP-Based Messaging Protocol_
 
 ---
 
-## Overview
+## ⚡ Overview
 
-FTPChat is a lightweight, encrypted messaging protocol implemented entirely in Python. It facilitates secure communication by reading and writing messages to a shared file hosted on an FTP server.
+**FTPChat** is a fast, lightweight, and end-to-end encrypted messaging application implemented in Python. It facilitates secure real-time communication by reading and writing structured payloads to a shared text file hosted on an FTP/FTPS/SFTP server.
 
-FTPChat is specifically designed for deployment in legacy environments, including low-power routers equipped with USB and FTP capabilities. This makes it an ideal solution for resource-constrained scenarios or discreet operations.
-
----
-
-## Key Features (v2.2)
-
-- **Encrypted chat messages** (PBKDF2-SHA256 → Fernet) with **zlib compression**.
-- **FTP/FTPS/SFTP fallback** for maximum compatibility.
-- **Threaded send/receive** + timed **auto-refresh loop** (keeps UI responsive).
-- **Offset/line-count based syncing** to minimize bandwidth usage.
-- **Saved setups** (save/load/delete) with **per-setup notification ignore**.
-- **Modal setup form** for faster configuration.
-- **Tray minimization** support (run in background while hidden).
-- **CustomTkinter GUI** with scrollable, non-editable chat history.
+Designed to operate seamlessly in restricted or legacy environments, FTPChat can run on low-power USB-enabled routers, remote servers, or air-gapped networks where traditional chat infrastructure cannot be deployed.
 
 ---
 
-## Notes about the protocol
+## 🔥 Key Features (v2.3)
 
-Messages are exchanged via a shared text file on the server. Each message line includes a timestamp, username, and an encrypted payload.
-
----
-
-## Protocol Operation
-
-Messages are exchanged via a shared text file on an FTP server. Each message contains:
-
-- Timestamp (YYYY-MM-DD HH:MM format)
-- Username
-- Encrypted content (Base64-encoded Fernet encryption with a salt and compression)
-
-The protocol provides:
-
-- Conflict-safe message writing (with fallback for servers not supporting APPEND)
-- Encrypted message formatting
-- Lightweight, file-based communication
-- Automatic compression for reduced file sizes
-- Offset-based reading to fetch only new messages
+- **🔐 End-to-End Encryption:** Messages are protected using `PBKDF2-SHA256` key derivation, `Fernet` symmetric encryption, and `zlib` compression to minimize bandwidth.
+- **📱 True Cross-Platform UI:** Fully rebuilt with **Flet (Flutter)**, offering native desktop performance alongside a dedicated **Android mobile experience**.
+- **🔄 Adaptive Transport Fallback:** Automatic connection sequence (`SFTP` ➔ `FTPS` ➔ `FTP`) guarantees delivery across varying network configurations.
+- **⚡ High-Efficiency Syncing:** Uses line-count and byte-offset reading to fetch only newly posted messages, dramatically cutting down data usage.
+- **📂 Saved Setup Profiles:** Save, edit, and delete multiple FTP configurations on the fly with per-setup notification controls.
+- **🧵 Non-Blocking Architecture:** Fully threaded background send/receive loops keep the user interface smooth and responsive during file I/O.
+- **🎯 Minimal Infrastructure:** Requires zero database setup—just any basic file transfer server.
 
 ---
 
-## Installation
+## 📜 Protocol & Message Format
 
-**Option 1: Executable**
+Messages are appended to a shared ledger file on the server. Each record consists of a **timestamp**, **sender identification**, and an **encrypted payload**:
 
-- Download `FtpChat.exe` for Windows 10/11 from [Releases](https://github.com/ahmedomardev/FTPChat/releases)
+$$\text{Message Record} = \text{Timestamp} \ \vert \ \text{Username} \ \vert \ \text{Base64}(\text{Encrypted Payload})$$
 
-**Option 2: Python Source**
+> [!NOTE]
+> For servers without native `APPEND` command support, FTPChat automatically utilizes atomic lock-and-write fallbacks to prevent race conditions during simultaneous posts.
 
-- Clone from [GitHub](https://github.com/ahmedomardev/FTPChat)
-- Requires Python 3.8+ and the dependencies listed in `requirements.txt`.
+---
 
-Install dependencies via pip:
+## 🚀 Installation & Setup
 
-```
+### Option 1: Native Binaries (Recommended)
+
+Download the pre-compiled packages directly from [GitHub Releases](https://github.com/ahmedomardev/FTPChat/releases):
+
+- 🖥️ **Windows:** Download `FTPChat.exe`
+- 📱 **Android:** Download and install `FTPChat.apk`
+
+---
+
+### Option 2: Run from Source
+
+#### Prerequisites
+
+- **Python:** 3.8 or higher
+- **Dependencies:** Install requirements via `pip`
+
+```bash
+# Clone repository
+git clone https://github.com/ahmedomardev/FTPChat.git
+cd FTPChat
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Launch application
+python ftpchat.py
+
 ```
 
 ---
 
-## Usage Instructions
+## 🛠️ Usage Workflow
 
-1. **Prepare FTP Server**
-   - Set up an FTP server (local LAN or cloud-based)
-   - Refer to `Documentation/Quick Start Guide (Making FTP Server).md` for local setup
-   - Or use [SFTPCloud©](https://sftpcloud.io/tools/free-ftp-server) for global access
-
-2. **Run FTPChat**
-   - Execute `FtpChat.exe` (Windows) or `python FtpChat.py` (MacOS or Linux)
-
-3. **Configure Connection**
-   - Click "Setup" to enter FTP host, username, password, chat file name, and encryption key
-   - Encryption key is used for message encryption/decryption
-
-4. **Start Chatting**
-   - Enter username and type messages
-   - Send messages using the "Send" button or Alt key
-   - Messages auto-sync across all connected clients
-   - Chat history is non-editable and read-only
+| Step  | Action                 | Description                                                                                                                    |
+| ----- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **1** | **Prepare FTP Server** | Use a local router FTP, dedicated server, or free cloud service like [SFTPCloud©](https://sftpcloud.io/tools/free-ftp-server). |
+| **2** | **Configure Session**  | Open **Setup** and enter host, port, credentials, target chat filename, and shared encryption key.                             |
+| **3** | **Start Chatting**     | Pick a display username and begin exchanging end-to-end encrypted messages instantly!                                          |
 
 ---
 
-## Requirements
+## 🖥️ System Requirements
 
-1. For source code:
-   - Python 3.8+
-   - Dependencies: see `requirements.txt`
-2. For Exe:
-   - Windows 10/11
-3. For Both
-   - FTP server access (local or remote)
-
----
-
-## Apps Used:
-
-- VScode
-- Python 3
-- Notepad ++
-- Git
-- Inno setup
+| Platform          | Requirements                                     |
+| ----------------- | ------------------------------------------------ |
+| **Windows**       | Windows 10 / 11                                  |
+| **Android**       | Android 8.0 (API level 26) or higher             |
+| **Python Source** | Python 3.8+ (`flet`, `cryptography`, `paramiko`) |
+| **Server**        | Any standard FTP, FTPS, or SFTP server           |
 
 ---
 
-## Deployment Scenarios
+## 🚀 Deployment Scenarios
 
-- **Local Network**: Set up FTP on a local server for team communication
-- **Remote/Global**: Use cloud FTP services for worldwide access
-- **Legacy Hardware**: Deploy on low-power routers with USB and FTP support
-- **Offline Operations**: Messages sync only when FTP connection is available
-
----
-
-## License
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, and/or sublicense copies of the Software, subject to the following conditions:
-
-- The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-- **Commercial use of this software requires prior written permission from the author.**
-- **The author reserves the right to relicense this software as closed-source or commercial at any time.**
-- All rights to the name “FTPChat” and its protocol specification are retained by Ahmed Omar Saad.
-
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-Notes: The author may offer separate commercial licenses for enterprise or closed-source use. Contact <ahmedomardev@outlook.com> for inquiries. This license applies to all source code, documentation, and protocol specifications included in the FTPChat project.
+- **Local Area Networks:** Turn any USB-equipped home router into a private office chat server.
+- **Air-Gapped & Restricted Nets:** Deploy over isolated FTP storage endpoints.
+- **Low-Bandwidth Operations:** Compression and delta syncing allow operation over weak cellular or satellite links.
 
 ---
 
-## Support & Contact
+## 🛠️ Built With
 
-- **Email:** [ahmedomardev@outlook.com](mailto:ahmedomardev@outlook.com)
-- **GitHub:** [https://github.com/ahmedomardev/FTPChat](https://github.com/ahmedomardev/FTPChat)
-- **Website:** [ahmed-omar-software-projects.mydurable.com](ahmed-omar-software-projects.mydurable.com)
+- **Languages & Core:** Python 3, Dart (Flutter)
+- **UI Engine:** Flet Framework
+- **IDE & Tools:** VS Code, Git, Android SDK / Toolchain
+
+---
+
+## 📄 License & Terms
+
+Copyright © **Ahmed Omar Saad**. All rights reserved.
+
+Permission is hereby granted to use, copy, and distribute this software for non-commercial purposes under the following terms:
+
+- **Commercial Use:** Requires explicit prior written authorization from the author.
+- **Relicensing:** The author reserves the right to modify, restrict, or relicense the source code and protocol specification at any time.
+- **Attribution:** The above copyright notice and this permission notice must be included in all copies.
+
+_THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND._
+
+---
+
+## 📬 Contact & Links
+
+- 📧 **Email:** [ahmedomardev@outlook.com](https://www.google.com/search?q=mailto%3Aahmedomardev%40outlook.com)
+- 🐙 **GitHub:** [ahmedomardev/FTPChat](https://github.com/ahmedomardev/FTPChat)
+- 🌐 **Website:** [ahmed-omar-software-projects.mydurable.com](https://www.google.com/search?q=https://ahmed-omar-software-projects.mydurable.com)

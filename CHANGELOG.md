@@ -1,30 +1,28 @@
 # FTPChat
 
-**Version: 2.2**  
-**Type:** Custom Proprietary License  
-**Author:** Ahmed Omar Saad  
+**Version: 2.3**
+
+**Type:** Custom Proprietary License
+
+**Author:** Ahmed Omar Saad
+
 **Contact:** <ahmedomardev@outlook.com>
 
 ---
 
-## Highlights (v2.2)
+## Highlights (v2.3)
 
-- **Encrypted chat messages** (PBKDF2-SHA256 → Fernet) with **zlib compression** to reduce size.
-- **FTP/FTPS/SFTP fallback**: the app attempts the most secure transport available and degrades gracefully when needed.
-- **Threaded send/receive** and a timed **auto-refresh loop** to keep the UI responsive.
-- **Offset/line-count based syncing** to minimize bandwidth usage.
-- **Saved setups** (save/load/delete + per-setup notification ignore) and **modal setup** for faster configuration.
-- **Tray minimization** support so the app can keep running in the background.
-- **CustomTkinter GUI** with scrollable, non-editable chat history.
-- Reworked/streamlined internals for a faster app.
-- Added/expanded **saved setup management** (including ignore notifications).
-- Added **modal setup form**.
-- Added **SFTP → FTPS → FTP fallback** connection sequence.
-- Improved message synchronization to reduce unnecessary downloads.
+- **Cross-Platform Flutter & Flet UI**: Rebuilt the frontend engine using Flet, enabling native multi-platform compilation for **Android (.apk)** and **Windows (.exe)**.
+- **Custom Application Branding**: Integrated custom app icon packaging and assets bundle management directly across builds without relying on external config files.
+- **Enhanced Standalone Packaging**: Full compatibility with isolated builds, bundling dependencies, assets, and runtime components for offline deployment.
+- **Optimized Mobile & Desktop Ergonomics**: Responsive, modern layout redesigned to work smoothly on both touch devices (Android) and desktop environments (Windows).
+- **Stabilized Build Pipeline**: Streamlined build workflows and SDK detection logic to support clean, self-contained releases.
 
 ---
 
-## New in v2.2
+## New in v2.3
 
-- Bug Fixes
-- Remade UI for easier use and better look
+- Complete GUI overhaul migrated to the Flet framework.
+- Multi-platform support added for Android (APK) and Windows Desktop.
+- Performance and stability improvements.
+- Bug fixes and UI refinements.

@@ -2,18 +2,22 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "FTPChat"
-#define MyAppVersion "2.2"
+#define MyAppVersion "2.3"
 #define MyAppPublisher "ahmedomardev"
-#define MyAppExeName "FtpChat.exe"
+#define MyAppURL "https://ahmed-omar-software-projects.mydurable.com/"
+#define MyAppExeName "ftpchat.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{CE3DD7F5-F7C1-4B18-956D-D64AAB0B9ACE}
+AppId={{4F6ABCED-702B-4197-A5E1-BDF0534D2BDD}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
+AppPublisherURL={#MyAppURL}
+AppSupportURL={#MyAppURL}
+AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
 UninstallDisplayIcon={app}\{#MyAppExeName}
 ; "ArchitecturesAllowed=x64compatible" specifies that Setup cannot run
@@ -25,12 +29,12 @@ ArchitecturesAllowed=x64compatible
 ; the 64-bit view of the registry.
 ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
-LicenseFile=D:\Projects\Python\FtpChat\FtpChat 2.2\FTPChat\Exe\Setup\LICENSE.txt
+LicenseFile=D:\Projects\Python\FtpChat\FtpChat 2.3\FTPChat\exe\Setup\LICENSE.txt
 ; Uncomment the following line to run in non administrative install mode (install for current user only).
 ;PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-OutputDir=D:\Projects\Python\FtpChat\FtpChat 2.2\FTPChat\Exe\Setup\Output
 OutputBaseFilename=mysetup
+SetupIconFile=D:\Projects\Python\FtpChat\FtpChat 2.3\FTPChat\exe\Setup\SetupClassicIcon.ico
 SolidCompression=yes
 WizardStyle=modern
 
@@ -41,7 +45,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "D:\Projects\Python\FtpChat\FtpChat 2.2\FTPChat\Exe\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "D:\Projects\Python\FtpChat\FtpChat 2.3\FTPChat\exe\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
