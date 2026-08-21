@@ -1,0 +1,55 @@
+name: Build Meshwar APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android Licenses
+        run: |
+          mkdir -p $ANDROID_HOME/licenses
+          echo "243330a17d3d06a424107d4be92452d26376513a" > $ANDROID_HOME/licenses/android-sdk-license
+          echo "84831b9409646a918e30573bab4c9c91346d8abd" > $ANDROID_HOME/licenses/android-sdk-preview-license
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+      - name: Install Native Build Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev liblzma-dev clang cmake ninja-build pkg-config
+
+      - name: Install Flet CLI
+        run: |
+          python -m pip install --upgrade pip
+          pip install flet flet-cli
+
+      - name: Build Flet APK
+        run: |
+          flet build apk --yes --verbose --python-version 3.12 --module-name meshwar
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Meshwar-Release-APK
+          path: build/apk/*.apk
