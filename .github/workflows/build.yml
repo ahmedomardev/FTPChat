@@ -1,4 +1,4 @@
-name: Build Flet Linux .deb Package
+name: Cross-Platform Flet Build
 
 on:
   push:
@@ -6,9 +6,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  # ------------------------------------------------------------------
+  # 1. LINUX BUILD (.deb Package)
+  # ------------------------------------------------------------------
+  build-linux:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -34,20 +36,149 @@ jobs:
           python -m pip install --upgrade pip
           pip install flet flet-cli
 
-      - name: Build Flet Linux Executable
+      - name: Build Flet Linux
         run: |
           flet build linux --yes --verbose --python-version 3.12 --module-name main
 
+      - name: Structure Package Files
+        run: |
+          mkdir -p package_root/opt/ftpchat
+          mkdir -p package_root/usr/bin
+          mkdir -p package_root/usr/share/applications
+
+          cp -r build/linux/* package_root/opt/ftpchat/
+          chmod -R 755 package_root/opt/ftpchat/
+
+          ln -s /opt/ftpchat/main package_root/usr/bin/ftpchat
+
+          cat <<EOF > package_root/usr/share/applications/ftpchat.desktop
+          [Desktop Entry]
+          Type=Application
+          Name=FTPChat
+          Comment=FTP Chat Application
+          Exec=/opt/ftpchat/main
+          Terminal=false
+          Categories=Network;Chat;
+          EOF
+
       - name: Package into .deb
         run: |
-          fpm -s dir -t deb \
-            -n ftpchat \
-            -v 2.3.0 \
-            --prefix /opt/ftpchat \
-            -C build/linux .
+          fpm -s dir -t deb -n ftpchat -v 2.3.0 -C package_root .
 
-      - name: Upload .deb Artifact
+      - name: Upload Linux .deb Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FTPChat-Debian-Package
+          name: FTPChat-Linux-Debian
           path: ftpchat_2.3.0_amd64.deb
+
+  # ------------------------------------------------------------------
+  # 2. WINDOWS BUILD (.exe Bundle)
+  # ------------------------------------------------------------------
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Flet CLI
+        run: |
+          python -m pip install --upgrade pip
+          pip install flet flet-cli
+
+      - name: Build Flet Windows
+        run: |
+          flet build windows --yes --verbose --python-version 3.12 --module-name main
+
+      - name: Compress Windows Build Output
+        run: |
+          Compress-Archive -Path "build\windows\*" -DestinationPath "FTPChat-Windows.zip"
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FTPChat-Windows-x64
+          path: FTPChat-Windows.zip
+
+  # ------------------------------------------------------------------
+  # 3. macOS BUILD (.app Bundle)
+  # ------------------------------------------------------------------
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Flet CLI
+        run: |
+          python -m pip install --upgrade pip
+          pip install flet flet-cli
+
+      - name: Build Flet macOS
+        run: |
+          flet build macos --yes --verbose --python-version 3.12 --module-name main
+
+      - name: Compress macOS Build Output
+        run: |
+          cd build/macos
+          tar -czvf ../../FTPChat-macOS.tar.gz .
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FTPChat-macOS
+          path: FTPChat-macOS.tar.gz
+
+  # ------------------------------------------------------------------
+  # 4. ANDROID BUILD (.apk Package)
+  # ------------------------------------------------------------------
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android Licenses
+        run: |
+          mkdir -p $ANDROID_HOME/licenses
+          echo "243330a17d3d06a424107d4be92452d26376513a" > $ANDROID_HOME/licenses/android-sdk-license
+          echo "84831b9409646a918e30573bab4c9c91346d8abd" > $ANDROID_HOME/licenses/android-sdk-preview-license
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+      - name: Install Flet CLI
+        run: |
+          python -m pip install --upgrade pip
+          pip install flet flet-cli
+
+      - name: Build Flet APK
+        run: |
+          flet build apk --yes --verbose --python-version 3.12 --module-name main
+
+      - name: Upload Android APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FTPChat-Android-APK
+          path: build/apk/*.apk
