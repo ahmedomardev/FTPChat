@@ -1,13 +1,13 @@
-name: Cross-Platform Flet Build
+name: Cross-Platform Release Builds
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   workflow_dispatch:
 
 jobs:
   # ------------------------------------------------------------------
-  # 1. LINUX BUILD (.deb Package)
+  # 1. LINUX BUILD (.deb Installer)
   # ------------------------------------------------------------------
   build-linux:
     runs-on: ubuntu-latest
@@ -18,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Install Build Dependencies & Ruby
         run: |
@@ -46,24 +46,36 @@ jobs:
           mkdir -p package_root/usr/bin
           mkdir -p package_root/usr/share/applications
 
+          # Copy built binaries to /opt/ftpchat
           cp -r build/linux/* package_root/opt/ftpchat/
           chmod -R 755 package_root/opt/ftpchat/
 
-          ln -s /opt/ftpchat/main package_root/usr/bin/ftpchat
+          # Symlink correct executable name to system path
+          ln -s /opt/ftpchat/FTPChat package_root/usr/bin/ftpchat
 
+          # Create system launcher entry with WSLg/Linux graphics fix pre-configured
           cat <<EOF > package_root/usr/share/applications/ftpchat.desktop
           [Desktop Entry]
           Type=Application
           Name=FTPChat
           Comment=FTP Chat Application
-          Exec=/opt/ftpchat/main
+          Exec=env LIBGL_ALWAYS_SOFTWARE=1 /opt/ftpchat/FTPChat
           Terminal=false
           Categories=Network;Chat;
           EOF
 
       - name: Package into .deb
         run: |
-          fpm -s dir -t deb -n ftpchat -v 2.3.0 -C package_root .
+          fpm -s dir -t deb \
+            -n ftpchat \
+            -v 2.3.0 \
+            -d "libgles2" \
+            -d "libgl1-mesa-dri" \
+            -d "libglx-mesa0" \
+            -d "libegl1" \
+            -d "libx11-xcb1" \
+            -d "libxcb-dri3-0" \
+            -C package_root .
 
       - name: Upload Linux .deb Artifact
         uses: actions/upload-artifact@v4
@@ -72,10 +84,13 @@ jobs:
           path: ftpchat_2.3.0_amd64.deb
 
   # ------------------------------------------------------------------
-  # 2. WINDOWS BUILD (.exe Bundle)
+  # 2. WINDOWS BUILD (.zip Executable Bundle)
   # ------------------------------------------------------------------
   build-windows:
     runs-on: windows-latest
+    env:
+      PYTHONIOENCODING: "utf-8"
+      PYTHONUTF8: "1"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -83,7 +98,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Install Flet CLI
         run: |
@@ -91,7 +106,9 @@ jobs:
           pip install flet flet-cli
 
       - name: Build Flet Windows
+        shell: cmd
         run: |
+          chcp 65001
           flet build windows --yes --verbose --python-version 3.12 --module-name main
 
       - name: Compress Windows Build Output
@@ -105,10 +122,12 @@ jobs:
           path: FTPChat-Windows.zip
 
   # ------------------------------------------------------------------
-  # 3. macOS BUILD (.app Bundle)
+  # 3. macOS BUILD (.app Archive)
   # ------------------------------------------------------------------
   build-macos:
     runs-on: macos-latest
+    env:
+      PIP_ONLY_BINARY: ":all:"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -116,16 +135,16 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Install Flet CLI
         run: |
           python -m pip install --upgrade pip
           pip install flet flet-cli
 
-      - name: Build Flet macOS
+      - name: Build Flet macOS (ARM64)
         run: |
-          flet build macos --yes --verbose --python-version 3.12 --module-name main
+          flet build macos --yes --verbose --arch arm64 --python-version 3.12 --module-name main
 
       - name: Compress macOS Build Output
         run: |
@@ -135,7 +154,7 @@ jobs:
       - name: Upload macOS Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FTPChat-macOS
+          name: FTPChat-macOS-arm64
           path: FTPChat-macOS.tar.gz
 
   # ------------------------------------------------------------------
@@ -150,13 +169,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Set up Java 17
         uses: actions/setup-java@v5
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
